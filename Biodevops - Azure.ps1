@@ -68,17 +68,18 @@ function createPromo{
 
     try{
         ExchConnect($Global:AADCredential)
+        $nameLDS = "$acronymPromotion"+"."+"$yearPromotion"
         Write-Host "[*] Creation of a Microsoft365 group" -ForegroundColor Yellow
-        New-UnifiedGroup -DisplayName $namePromotion `
-                         -Alias $namePromotion `
+        New-UnifiedGroup -DisplayName $nameLDS `
+                         -Alias $nameLDS `
                          -AccessType Private `
-                         -PrimarySmtpAddress "$namePromotion@biodevops.tech" `
+                         -PrimarySmtpAddress "$nameLDS@biodevops.tech" `
                          -Language fr-FR `
                          -Owner "administrateur@biodevops.tech" | Out-Null
         Start-Sleep 5
-        $idGRP = Get-UnifiedGroup -Identity $namePromotion
+        $idGRP = Get-UnifiedGroup -Identity $nameLDS
         AADConnect($Global:AADCredential)
-        Write-Host "[+] The $namePromotion group successfully created" -ForegroundColor Green
+        Write-Host "[+] The $nameLDS group successfully created" -ForegroundColor Green
     }catch{
         Write-Error $Error[0]
     }
