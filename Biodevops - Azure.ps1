@@ -8,6 +8,8 @@ function require{
 function Menu{
     Write-Host "================ Biodevops - AzureAD management ================"
     Write-Host "[1] - Create a promotion"
+    Write-Host "[2] - Create a unique user"
+    Write-Host "[3] - Create users in bulk"
     Write-Host "[0] - Exit"
 
 }
@@ -114,7 +116,7 @@ function createUser{
     [string]$yearpromotionUser
     [string]$acronympromotionUser
 
-    
+
     New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
                     -GivenName "$firstnameUser" `
                     -Surname "$lastnameUser" `
