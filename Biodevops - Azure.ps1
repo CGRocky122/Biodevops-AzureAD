@@ -109,7 +109,25 @@ function createPromo{
 
 
 function createUser{
+    [string]$firstnameUser
+    [string]$lastnameUser
+    [string]$yearpromotionUser
+    [string]$acronympromotionUser
 
+    
+    New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
+                    -GivenName "$firstnameUser" `
+                    -Surname "$lastnameUser" `
+                    -UserPrincipalName "$mailUser" `
+                    -PasswordProfile $passwordUser `
+                    -MailNickname "$firstnameUser.$lastnameUser" `
+                    -JobTitle "Etudiant" `
+                    -Department "$acronympromotionUser $yearpromotionUser" `
+                    -CompanyName "BioDevops" `
+                    -UsageLocation FR `
+                    -UserType Member
+    
+    Set-AzureADUserExtension -ObjectId "$mailUser" -ExtensionName "employeeId" -ExtensionValue $uidUser
 }
 
 function createUsers{
