@@ -5,6 +5,13 @@ function require{
     Install-Module -Name MicrosoftTeams
 }
 
+function Menu{
+    Write-Host "================ Biodevops - AzureAD management ================"
+    Write-Host "[1] - Create a promotion"
+    Write-Host "[0] - Exit"
+
+}
+
 function AADConnect{
     param(
         [PSCredential]$Credential
@@ -70,11 +77,11 @@ function createPromo{
         $nameLDS = "$acronymPromotion"+"."+"$yearPromotion"
         Write-Host "[*] Creation of a Microsoft365 group" -ForegroundColor Yellow
         New-AzureADMSGroup -DisplayName $nameLDS `
-                         -MailEnabled $True `
-                         -Visibility Private `
-                         -MailNickname $nameLDS `
-                         -GroupTypes Unified `
-                         -SecurityEnabled $True | Out-Null
+                           -MailEnabled $True `
+                           -Visibility Private `
+                           -MailNickname $nameLDS `
+                           -GroupTypes Unified `
+                           -SecurityEnabled $True | Out-Null
         $idGRP = Get-AzureADMSGroup -Filter "DisplayName eq '$nameLDS'"
         Write-Host "[+] The $nameLDS group successfully created" -ForegroundColor Green
     }catch{
@@ -98,14 +105,8 @@ function createPromo{
         Write-Error $Error[0]
     }
     Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
-
-    [int]$userCreation = Read-Host "[1] - Create a unique user`n[2] - Create users in bulk`n[0] - Quit`nEnter an action"
-    Switch($userCreation){
-        1{createUser}
-        2{createUsers}
-        0{break}
-    }
 }
+
 
 function createUser{
 
@@ -116,26 +117,16 @@ function createUsers{
 }
 
 # ======== MAIN ========
-# Lancement des pré-requis
 require
-
-# Initialisation de la connexion
 $AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
-try{
-    AADConnect($AADCredential)
-    Write-Host "[+] Connected to the AzureAD domain" -ForegroundColor Green
-}catch{
-    Write-Error $Error[0]
-}
 
-
-
-[int]$MainMenu = Read-Host "[1] - Create a promotion`n[0] - Exit`nEnter an action"
-Switch($MainMenu){
+do{
+    Menu
+    [int]$MainMenu = Read-Host "Enter an action"
+    Switch($MainMenu){
     1{createPromo}
     0{break}
-}
+    }
+}until($MainMenu -eq 0)
 
-# Fermeture du script
 AADDisconnect
-Read-Host "Appuyer sur ENTREE pour quitter ..."
