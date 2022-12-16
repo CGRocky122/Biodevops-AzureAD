@@ -67,26 +67,23 @@ function createPromo{
     }
 
     try{
-        ExchConnect($Global:AADCredential)
         $nameLDS = "$acronymPromotion"+"."+"$yearPromotion"
         Write-Host "[*] Creation of a Microsoft365 group" -ForegroundColor Yellow
-        New-UnifiedGroup -DisplayName $nameLDS `
-                         -Alias $nameLDS `
-                         -AccessType Private `
-                         -PrimarySmtpAddress "$nameLDS@biodevops.tech" `
-                         -Language fr-FR `
-                         -Owner "administrateur@biodevops.tech" | Out-Null
-        Start-Sleep 5
-        $idGRP = Get-UnifiedGroup -Identity $nameLDS
-        AADConnect($Global:AADCredential)
+        New-AzureADMSGroup -DisplayName $nameLDS `
+                         -MailEnabled $True `
+                         -Visibility Private `
+                         -MailNickname $nameLDS `
+                         -GroupTypes Unified `
+                         -SecurityEnabled $True | Out-Null
+        $idGRP = Get-AzureADMSGroup -Filter "DisplayName eq '$nameLDS'"
         Write-Host "[+] The $nameLDS group successfully created" -ForegroundColor Green
     }catch{
         Write-Error $Error[0]
     }
 
     try{
-        Add-AzureADMSAdministrativeUnitMember -Id $idAU.id `
-                                              -RefObjectId $idGRP.ExternalDirectoryObjectId | Out-Null
+        Add-AzureADMSAdministrativeUnitMember -Id $idAU.Id `
+                                              -RefObjectId $idGRP.Id | Out-Null
         Write-Host "[+] Adding the $namePromotion group in the $namePromotion AU success " -ForegroundColor Green
     }catch{
         Write-Error $Error[0]
@@ -94,9 +91,9 @@ function createPromo{
 
     try{
         TeamsConnect($Global:AADCredential)
-        New-Team -Group $idGRP.ExternalDirectoryObjectId | Out-Null
+        New-Team -Group $idGRP.Id | Out-Null
         AADConnect($Global:AADCredential)
-        Write-Host "[+] The Teams $namePromotion group associated with the Microsoft365 group has been activated" -ForegroundColor Green
+        Write-Host "[+] The Teams $nameLDS group associated with the Microsoft365 group has been activated" -ForegroundColor Green
     }catch{
         Write-Error $Error[0]
     }
