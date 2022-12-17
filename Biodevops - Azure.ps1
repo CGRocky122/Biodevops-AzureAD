@@ -111,25 +111,43 @@ function createPromo{
 
 
 function createUser{
-    [string]$firstnameUser
-    [string]$lastnameUser
-    [string]$yearpromotionUser
-    [string]$acronympromotionUser
+    [string]$firstnameUser = Read-Host "Enter the student's first name"
+    [string]$firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
+    [string]$lastnameUser = Read-Host "Enter the student's last name"
+    [string]$lastnameUser = $lastnameUser.ToUpper()
+    [string]$passwordUser = Read-Host "Enter a password (You need at least 8 characters: one number, one upper case, one lower case and one special character)"
+    $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
+    $passwordprofileUser.Password = $passwordUser
+    [string]$yearpromotionUser = Read-Host "Enter the year of the student's graduation"
+    [string]$acronympromotionUser = Read-Host "Enter the student's class acronym"
+    [string]$uidUser = "U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)
+    [string]$uidUser = $uidUser -replace "\s",""
+    [string]$mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
 
+    try{
+        Write-Host "[*] Creation a student account in progress" -ForegroundColor Yellow
+        New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
+                        -GivenName "$firstnameUser" `
+                        -Surname "$lastnameUser" `
+                        -UserPrincipalName "$mailUser" `
+                        -PasswordProfile $passwordprofileUser `
+                        -MailNickname "$firstnameUser.$lastnameUser" `
+                        -JobTitle "Etudiant" `
+                        -Department "$acronympromotionUser $yearpromotionUser" `
+                        -CompanyName "BioDevops" `
+                        -UsageLocation FR `
+                        -UserType Member `
+                        -AccountEnabled $True | Out-Null
+        Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
+    }catch{
+        Write-Error $Error[0]
+    }
 
-    New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
-                    -GivenName "$firstnameUser" `
-                    -Surname "$lastnameUser" `
-                    -UserPrincipalName "$mailUser" `
-                    -PasswordProfile $passwordUser `
-                    -MailNickname "$firstnameUser.$lastnameUser" `
-                    -JobTitle "Etudiant" `
-                    -Department "$acronympromotionUser $yearpromotionUser" `
-                    -CompanyName "BioDevops" `
-                    -UsageLocation FR `
-                    -UserType Member
-    
-    Set-AzureADUserExtension -ObjectId "$mailUser" -ExtensionName "employeeId" -ExtensionValue $uidUser
+    try{
+        Set-AzureADUserExtension -ObjectId "$mailUser" -ExtensionName "employeeId" -ExtensionValue $uidUser | Out-Null
+    }catch{
+        Write-Error $Error[0]
+    }
 }
 
 function createUsers{
@@ -139,12 +157,15 @@ function createUsers{
 # ======== MAIN ========
 require
 $AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
+AADConnect($AADCredential)
 
 do{
     Menu
     [int]$MainMenu = Read-Host "Enter an action"
     Switch($MainMenu){
     1{createPromo}
+    2{createUser}
+    3{createUsers}
     0{break}
     }
 }until($MainMenu -eq 0)
