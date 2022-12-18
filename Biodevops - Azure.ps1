@@ -26,13 +26,13 @@ function AADConnect{
     }
 }
 
-function ExchConnect{
+function OfficeConnect{
     param(
         [PSCredential]$Credential
     )
 
     try{
-        Connect-ExchangeOnline -Credential $Credential -ShowBanner:$false  | Out-Null
+        Connect-MsolService -Credential $Credential | Out-Null
     }catch{
         Write-Error $Error[0]
     }
@@ -144,7 +144,20 @@ function createUser{
     }
 
     try{
+        Write-Host "[*] Assignment of a unique identifier" -ForegroundColor Yellow
         Set-AzureADUserExtension -ObjectId "$mailUser" -ExtensionName "employeeId" -ExtensionValue $uidUser | Out-Null
+        Write-Host "[+] The user $firstnameUser $lastnameUser will have as unique identifier $uidUser" -ForegroundColor Green
+    }catch{
+        Write-Error $Error[0]
+    }
+
+    try{
+        Write-Host "[*] Granting of an Office license" -ForegroundColor Yellow
+        OfficeConnect($Global:AADCredential)
+        Start-Sleep 2
+        Set-MsolUserLicense -UserPrincipalName "$mailUser" -AddLicenses "biodevops:DEVELOPERPACK_E5"
+        Write-Host "[*] An Office365 E5 license has been assigned to $firstnameUser $lastnameUser' account" -ForegroundColor Green
+        AADConnect($Global:AADCredential)
     }catch{
         Write-Error $Error[0]
     }
