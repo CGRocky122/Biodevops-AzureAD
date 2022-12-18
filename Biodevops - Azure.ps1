@@ -110,6 +110,10 @@ function createsinglePromo{
     Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
 }
 
+function createbulkPromo{
+    
+}
+
 function Get-SkuID{
     $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense 
     $planname = "DEVELOPERPACK_E5"
