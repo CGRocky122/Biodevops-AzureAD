@@ -166,7 +166,7 @@ function createUsers{
 
 # ======== MAIN ========
 require
-$AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
+$Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
 AADConnect($AADCredential)
 
 do{
