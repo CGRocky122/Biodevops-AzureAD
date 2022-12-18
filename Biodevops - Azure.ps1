@@ -26,18 +26,6 @@ function AADConnect{
     }
 }
 
-function OfficeConnect{
-    param(
-        [PSCredential]$Credential
-    )
-
-    try{
-        Connect-MsolService -Credential $Credential | Out-Null
-    }catch{
-        Write-Error $Error[0]
-    }
-}
-
 function TeamsConnect{
     param(
         [PSCredential]$Credential
@@ -109,6 +97,14 @@ function createPromo{
     Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
 }
 
+function Get-SkuID{
+    $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense 
+    $planname = "DEVELOPERPACK_E5"
+    $licenseadd = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses
+    $License.SkuId = (Get-AzureADSubscribedSku | Where-Object -Property SkuPartNumber -Value $planName -EQ).SkuID
+    $licenseadd.AddLicenses = $license
+    return $licenseadd
+}
 
 function createUser{
     [string]$firstnameUser = Read-Host "Enter the student's first name"
@@ -145,7 +141,9 @@ function createUser{
 
     try{
         Write-Host "[*] Assignment of a unique identifier" -ForegroundColor Yellow
-        Set-AzureADUserExtension -ObjectId "$mailUser" -ExtensionName "employeeId" -ExtensionValue $uidUser | Out-Null
+        Set-AzureADUserExtension -ObjectId "$mailUser" `
+                                 -ExtensionName "employeeId" `
+                                 -ExtensionValue $uidUser | Out-Null
         Write-Host "[+] The user $firstnameUser $lastnameUser will have as unique identifier $uidUser" -ForegroundColor Green
     }catch{
         Write-Error $Error[0]
@@ -153,11 +151,10 @@ function createUser{
 
     try{
         Write-Host "[*] Granting of an Office license" -ForegroundColor Yellow
-        OfficeConnect($Global:AADCredential)
-        Start-Sleep 2
-        Set-MsolUserLicense -UserPrincipalName "$mailUser" -AddLicenses "biodevops:DEVELOPERPACK_E5"
+        $skuidE5 = Get-SkuID
+        Set-AzureADUserLicense -ObjectId "$mailUser" `
+                               -AssignedLicenses $skuidE5 | Out-Null
         Write-Host "[*] An Office365 E5 license has been assigned to $firstnameUser $lastnameUser' account" -ForegroundColor Green
-        AADConnect($Global:AADCredential)
     }catch{
         Write-Error $Error[0]
     }
