@@ -5,13 +5,26 @@ function require{
     Install-Module -Name MicrosoftTeams
 }
 
-function Menu{
-    Write-Host "================ Biodevops - AzureAD management ================"
-    Write-Host "[1] - Create a promotion"
-    Write-Host "[2] - Create a unique user"
-    Write-Host "[3] - Create users in bulk"
+function MainMenu{
+    Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
+    Write-Host "[1] - Promotions menu"
+    Write-Host "[2] - Users menu"
     Write-Host "[0] - Exit"
 
+}
+
+function PromoMenu{
+    Write-Host "`n================ Biodevops - AzureAD management - Promotions Menu ================"
+    Write-Host "[1] - Create a unique promotion"
+    Write-Host "[2] - Create promotion in bulk"
+    Write-Host "[0] - Return to main menu"
+}
+
+function UserMenu{
+    Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
+    Write-Host "[1] - Create a unique user"
+    Write-Host "[2] - Create users in bulk"
+    Write-Host "[0] - Return to main menu"
 }
 
 function AADConnect{
@@ -42,7 +55,7 @@ function AADDisconnect{
     Disconnect-AzureAD
 }
 
-function createPromo{
+function createsinglePromo{
     [int]$yearPromotion = Read-Host "Enter the year of the promotion"
     [int]$SelectacronymPromotion = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
     Switch($SelectacronymPromotion){
@@ -106,7 +119,7 @@ function Get-SkuID{
     return $licenseadd
 }
 
-function createUser{
+function createsingleUser{
     [string]$firstnameUser = Read-Host "Enter the student's first name"
     [string]$firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
     [string]$lastnameUser = Read-Host "Enter the student's last name"
@@ -160,7 +173,7 @@ function createUser{
     }
 }
 
-function createUsers{
+function createbulkUsers{
 
 }
 
@@ -170,12 +183,31 @@ $Global:AADCredential = Get-Credential -Message "Enter the login credentials of 
 AADConnect($Global:AADCredential)
 
 do{
-    Menu
+    MainMenu
     [int]$MainMenu = Read-Host "Enter an action"
     Switch($MainMenu){
-    1{createPromo}
-    2{createUser}
-    3{createUsers}
+    1{
+        do{
+            PromoMenu
+            [int]$PromoMenu = Read-Host "Enter an action"
+            Switch($PromoMenu){
+                1{createsinglePromo}
+                2{createbulkPromo}
+                0{break}
+            }
+        }until($PromoMenu -eq 0)
+    }
+    2{
+        do{
+            UserMenu
+            [int]$UserMenu = Read-Host "Enter an action"
+            Switch($UserMenu){
+                1{createsingleUser}
+                2{createbulkUsers}
+                0{break}
+            }
+        }until($UserMenu -eq 0)
+    }
     0{break}
     }
 }until($MainMenu -eq 0)
