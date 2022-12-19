@@ -115,6 +115,7 @@ function createbulkPromo{
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
+    $counterPromos = 0
     Foreach($Promo in $dataCSV){
         [int]$yearPromotion = $Promo.yearpromotion
         [string]$acronymPromotion = $Promo.acronympromotion
@@ -142,10 +143,12 @@ function createbulkPromo{
             New-Team -Group $idGRP.Id | Out-Null
             AADConnect($Global:AADCredential)
             Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
+            $counterPromos += 1
         }catch{
             Write-Error $Error[0]
         }
     }
+    Write-Host "[+] Creation success of $counterPromos promotions" -ForegroundColor Green
 }
 
 function Get-SkuID{
@@ -215,6 +218,7 @@ function createbulkUsers{
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
+    $counterUsers = 0
     Foreach ($User in $dataCSV){
         [string]$firstnameUser = $User.firstname
         [string]$firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
@@ -251,10 +255,12 @@ function createbulkUsers{
             Set-AzureADUserLicense -ObjectId "$mailUser" `
                                    -AssignedLicenses $skuidE5 | Out-Null
             Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
+            $counterUsers += 1
         }catch{
             Write-Error $Error[0]
         }
     }
+    Write-Host "[+] Creation success of $counterUsers users" -ForegroundColor Green
 }
 
 # ======== MAIN ========
