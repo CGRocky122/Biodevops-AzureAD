@@ -39,6 +39,10 @@ function AADConnect{
     }
 }
 
+function AADDisconnect{
+    Disconnect-AzureAD
+}
+
 function TeamsConnect{
     param(
         [PSCredential]$Credential
@@ -49,10 +53,6 @@ function TeamsConnect{
     }catch{
         Write-Error $Error[0]
     }
-}
-
-function AADDisconnect{
-    Disconnect-AzureAD
 }
 
 function createsinglePromo{
@@ -178,7 +178,12 @@ function createsingleUser{
 }
 
 function createbulkUsers{
+    $pathCSV = Read-Host "Enter the location of your CSV"
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter "," -EncodingdataCSV
 
+    Foreach ($User in $dataCSV){
+        
+    }
 }
 
 # ======== MAIN ========
