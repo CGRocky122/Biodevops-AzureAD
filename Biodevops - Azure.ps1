@@ -24,6 +24,8 @@ function UserMenu{
     Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
     Write-Host "[1] - Create a unique user"
     Write-Host "[2] - Create users in bulk"
+    Write-Host "[3] - Disable a unique user"
+    Write-Host "[4] - Disable users in bulk"
     Write-Host "[0] - Return to main menu"
 }
 
@@ -263,6 +265,24 @@ function createbulkUsers{
     Write-Host "[+] Creation success of $counterUsers users" -ForegroundColor Green
 }
 
+function desactivatesingleUser{
+    [string]$upnUser = Read-Host "Enter the UPN of the disabled user"
+    $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").ObjectId
+
+    try{
+        Write-Host "[*] Deactivation of a user" -ForegroundColor Yellow
+        Set-AzureADUser -ObjectId $idUser `
+                        -AccountEnabled $False | Out-Null
+        Write-Host "[+] The account of the student "((Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").DisplayName)" has been successfully deactivated" -ForegroundColor Green
+    }catch{
+        Write-Error $Error[0]
+    }
+}
+
+function desactivatebulkUsers{
+
+}
+
 # ======== MAIN ========
 require
 $Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
@@ -290,6 +310,8 @@ do{
             Switch($UserMenu){
                 1{createsingleUser}
                 2{createbulkUsers}
+                3{desactivatesingleUser}
+                4{desactivatebulkUsers}
                 0{break}
             }
         }until($UserMenu -eq 0)
