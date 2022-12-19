@@ -112,7 +112,40 @@ function createsinglePromo{
 }
 
 function createbulkPromo{
-    
+    $pathCSV = Read-Host "Enter the location of your CSV"
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
+
+    Foreach($Promo in $dataCSV){
+        [int]$yearPromotion = $Promo.yearpromotion
+        [string]$acronymPromotion = $Promo.acronympromotion
+        $namePromotion = "$yearPromotion"+"_"+"$acronymPromotion"
+        $nameLDS = "$acronymPromotion"+"."+"$yearPromotion"
+
+        try{
+            Write-Host "[*] Creation of a promotion in progress" -ForegroundColor Yellow
+            New-AzureADMSAdministrativeUnit -DisplayName $namePromotion `
+                                            -Description $namePromotion | Out-Null
+            $idAU = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namePromotion'"
+
+            New-AzureADMSGroup -DisplayName $nameLDS `
+                               -MailEnabled $True `
+                               -Visibility Private `
+                               -MailNickname $nameLDS.ToLower() `
+                               -GroupTypes Unified `
+                               -SecurityEnabled $True | Out-Null
+            $idGRP = Get-AzureADMSGroup -Filter "DisplayName eq '$nameLDS'"
+
+            Add-AzureADMSAdministrativeUnitMember -Id $idAU.Id `
+                                                  -RefObjectId $idGRP.Id | Out-Null
+            
+            TeamsConnect($Global:AADCredential)
+            New-Team -Group $idGRP.Id | Out-Null
+            AADConnect($Global:AADCredential)
+            Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
+        }catch{
+            Write-Error $Error[0]
+        }
+    }
 }
 
 function Get-SkuID{
