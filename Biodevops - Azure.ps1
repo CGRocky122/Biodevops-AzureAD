@@ -100,6 +100,7 @@ function createsinglePromo{
     }
 
     try{
+        Write-Host "[*] Activation of the teams group" -ForegroundColor Yellow
         TeamsConnect($Global:AADCredential)
         New-Team -Group $idGRP.Id | Out-Null
         AADConnect($Global:AADCredential)
