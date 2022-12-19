@@ -180,10 +180,47 @@ function createsingleUser{
 
 function createbulkUsers{
     $pathCSV = Read-Host "Enter the location of your CSV"
-    $dataCSV = Import-CSV -Path $pathCSV -Delimiter "," -EncodingdataCSV
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
     Foreach ($User in $dataCSV){
+        [string]$firstnameUser = $User.firstname
+        [string]$firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
+        [string]$lastnameUser = $User.lastname
+        [string]$lastnameUser = $lastnameUser.ToUpper()
+        $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
+        $passwordprofileUser.Password = $User.password
+        [string]$acronympromotionUser = $User.acronympromotion
+        [string]$yearpromotionUser = $User.yearpromotion
+        [string]$uidUser = "U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)
+        [string]$uidUser = $uidUser -replace "\s",""
+        [string]$mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
         
+        try{
+            Write-Host "[*] Creation a student account in progress" -ForegroundColor Yellow
+            New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
+                            -GivenName "$firstnameUser" `
+                            -Surname "$lastnameUser" `
+                            -UserPrincipalName "$mailUser" `
+                            -PasswordProfile $passwordprofileUser `
+                            -MailNickname "$firstnameUser.$lastnameUser" `
+                            -JobTitle "Etudiant" `
+                            -Department "$acronympromotionUser $yearpromotionUser" `
+                            -CompanyName "BioDevops" `
+                            -UsageLocation FR `
+                            -UserType Member `
+                            -AccountEnabled $True | Out-Null
+
+            Set-AzureADUserExtension -ObjectId "$mailUser" `
+                                    -ExtensionName "employeeId" `
+                                    -ExtensionValue $uidUser | Out-Null
+
+            $skuidE5 = Get-SkuID
+            Set-AzureADUserLicense -ObjectId "$mailUser" `
+                                   -AssignedLicenses $skuidE5 | Out-Null
+            Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
+        }catch{
+            Write-Error $Error[0]
+        }
     }
 }
 
