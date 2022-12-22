@@ -280,7 +280,23 @@ function desactivatesingleUser{
 }
 
 function desactivatebulkUsers{
+    $pathCSV = Read-Host "Enter the location of your CSV"
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
+    $counterUser = 0
+    Foreach($User in $dataCSV){
+        [string]$upnUser = $User.UPN
+        $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").ObjectId
+
+        try{
+            Set-AzureADUser -ObjectId $idUser `
+                            -AccountEnabled $False | Out-Null
+        }catch{
+            Write-Error $Error[0]
+        }
+        $counterUser += 1
+    }
+    Write-Host "[+] Successful deactivation of $counterUser accounts" -ForegroundColor Green
 }
 
 # ======== MAIN ========
