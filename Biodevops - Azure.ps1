@@ -233,6 +233,22 @@ function createsingleUser{
     }catch{
         Write-Error $Error[0]
     }
+
+    try{
+        Write-Host "[*] Assignment of the student to a promotion" -ForegroundColor Yellow
+        $namepromotionUser = "$yearpromotionUser" + "_" + "$acronympromotionUser"
+        $nameldsGroup = "$acronympromotionUser"+"."+"$yearpromotionUser"
+        $idAU = (Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'").Id
+        $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'").ObjectId
+        $idGroup = (Get-AzureADGroup -Filter "DisplayName eq '$nameldsGroup'").ObjectId
+        Add-AzureADMSAdministrativeUnitMember -Id $idAU `
+                                              -RefObjectId $idUser | Out-Null
+        Add-AzureADGroupMember -ObjectId $idGroup `
+                               -RefObjectId $idUser | Out-Null
+        Write-Host "[+] Assignment of the student in the $namepromotionUser success promotion" -ForegroundColor Green
+    }catch{
+        Write-Error $Error[0]
+    }
 }
 
 function createbulkUsers{
@@ -277,6 +293,22 @@ function createbulkUsers{
                                    -AssignedLicenses $skuidE5 | Out-Null
             Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
             $counterUsers += 1
+        }catch{
+            Write-Error $Error[0]
+        }
+
+        try{
+            Write-Host "[*] Assignment of the student to a promotion" -ForegroundColor Yellow
+            $namepromotionUser = "$yearpromotionUser" + "_" + "$acronympromotionUser"
+            $nameldsGroup = "$acronympromotionUser"+"."+"$yearpromotionUser"
+            $idAU = (Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'").Id
+            $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'").ObjectId
+            $idGroup = (Get-AzureADGroup -Filter "DisplayName eq '$nameldsGroup'").ObjectId
+            Add-AzureADMSAdministrativeUnitMember -Id $idAU `
+                                                  -RefObjectId $idUser | Out-Null
+            Add-AzureADGroupMember -ObjectId $idGroup `
+                                   -RefObjectId $idUser | Out-Null
+            Write-Host "[+] Assignment of the student in the $namepromotionUser success promotion" -ForegroundColor Green
         }catch{
             Write-Error $Error[0]
         }
