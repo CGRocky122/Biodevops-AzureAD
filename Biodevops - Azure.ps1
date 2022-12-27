@@ -15,6 +15,13 @@ function MainMenu{
 
 function PromoMenu{
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Menu ================"
+    Write-Host "[1] - Create promotions"
+    Write-Host "[2] - Delete promotions"
+    Write-Host "[0] - Return to main menu"
+}
+
+function PromotionCreationMenu{
+    Write-Host "`n================ Biodevops - AzureAD management - Promotions Creation Menu ================"
     Write-Host "[1] - Create a unique promotion"
     Write-Host "[2] - Create promotion in bulk"
     Write-Host "[0] - Return to main menu"
@@ -22,10 +29,22 @@ function PromoMenu{
 
 function UserMenu{
     Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
+    Write-Host "[1] - Create users"
+    Write-Host "[2] - Disable users"
+    Write-Host "[0] - Return to main menu"
+}
+
+function UserCreationMenu{
+    Write-Host "`n================ Biodevops - AzureAD management - User Creation Menu ================"
     Write-Host "[1] - Create a unique user"
     Write-Host "[2] - Create users in bulk"
-    Write-Host "[3] - Disable a unique user"
-    Write-Host "[4] - Disable users in bulk"
+    Write-Host "[0] - Return to main menu"
+}
+
+function UserDisableMenu{
+    Write-Host "`n================ Biodevops - AzureAD management - User Disable Menu ================"
+    Write-Host "[1] - Disable a unique user"
+    Write-Host "[2] - Disable users in bulk"
     Write-Host "[0] - Return to main menu"
 }
 
@@ -313,8 +332,17 @@ do{
             PromoMenu
             [int]$PromoMenu = Read-Host "Enter an action"
             Switch($PromoMenu){
-                1{createsinglePromo}
-                2{createbulkPromo}
+                1{
+                    do {
+                        PromotionCreationMenu
+                        [int]$PromoCreateMenu = Read-Host "Enter an action"
+                        Switch($PromoCreateMenu){
+                            1{createsinglePromo}
+                            2{createbulkPromo}
+                            0{break}
+                        }
+                    }until($PromoCreateMenu -eq 0)
+                }
                 0{break}
             }
         }until($PromoMenu -eq 0)
@@ -324,10 +352,28 @@ do{
             UserMenu
             [int]$UserMenu = Read-Host "Enter an action"
             Switch($UserMenu){
-                1{createsingleUser}
-                2{createbulkUsers}
-                3{desactivatesingleUser}
-                4{desactivatebulkUsers}
+                1{
+                    do{
+                        UserCreationMenu
+                        [int]$UserCreateMenu = Read-Host "Enter an action"
+                        Switch($UserCreateMenu){
+                            1{createsingleUser}
+                            2{createbulkUsers}
+                            0{break}
+                        }
+                    }until($UserCreateMenu -eq 0)
+                }
+                2{
+                    do{
+                        UserDisableMenu
+                        [int]$UserDisableMenu = Read-Host "Enter an Action"
+                        Switch($UserDisableMenu){
+                            1{desactivatesingleUser}
+                            2{desactivatebulkUsers}
+                            0{break}
+                        }
+                    }until($UserDisableMenu -eq 0)
+                }
                 0{break}
             }
         }until($UserMenu -eq 0)
