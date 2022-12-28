@@ -6,6 +6,7 @@ function require{
 }
 
 function MainMenu{
+    Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
     Write-Host "[1] - Promotions menu"
     Write-Host "[2] - Users menu"
@@ -14,6 +15,7 @@ function MainMenu{
 }
 
 function PromoMenu{
+    Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Menu ================"
     Write-Host "[1] - Create promotions"
     Write-Host "[2] - Delete promotions"
@@ -21,6 +23,7 @@ function PromoMenu{
 }
 
 function PromotionCreationMenu{
+    Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Creation Menu ================"
     Write-Host "[1] - Create a unique promotion"
     Write-Host "[2] - Create promotion in bulk"
@@ -28,6 +31,7 @@ function PromotionCreationMenu{
 }
 
 function UserMenu{
+    Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
     Write-Host "[1] - Create users"
     Write-Host "[2] - Disable users"
@@ -35,6 +39,7 @@ function UserMenu{
 }
 
 function UserCreationMenu{
+    Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - User Creation Menu ================"
     Write-Host "[1] - Create a unique user"
     Write-Host "[2] - Create users in bulk"
@@ -42,6 +47,7 @@ function UserCreationMenu{
 }
 
 function UserDisableMenu{
+    Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - User Disable Menu ================"
     Write-Host "[1] - Disable a unique user"
     Write-Host "[2] - Disable users in bulk"
