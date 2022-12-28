@@ -1,3 +1,4 @@
+# Prerequisites
 function require{
     Install-Module -Name MSOnline
     Install-Module -Name AzureAD
@@ -5,6 +6,7 @@ function require{
     Install-Module -Name MicrosoftTeams
 }
 
+# Menus
 function MainMenu{
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
@@ -54,6 +56,7 @@ function UserDisableMenu{
     Write-Host "[0] - Return to main menu"
 }
 
+# Connection module Microsoft
 function AADConnect{
     param(
         [PSCredential]$Credential
@@ -82,6 +85,7 @@ function TeamsConnect{
     }
 }
 
+# Promotion
 function CreatePromotion {
     param (
         [int]$yearPromotion,
@@ -168,6 +172,7 @@ function CreatePromotionFromCSV{
     Write-Host "[+] Creation success of $counterPromos promotions" -ForegroundColor Green
 }
 
+# User
 function Get-SkuID{
     $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense 
     $planname = "DEVELOPERPACK_E5"
