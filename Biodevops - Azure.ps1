@@ -6,7 +6,7 @@ function require{
 }
 
 function MainMenu{
-    Clear-Host
+    #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
     Write-Host "[1] - Promotions menu"
     Write-Host "[2] - Users menu"
@@ -15,7 +15,7 @@ function MainMenu{
 }
 
 function PromoMenu{
-    Clear-Host
+    #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Menu ================"
     Write-Host "[1] - Create promotions"
     Write-Host "[2] - Delete promotions"
@@ -23,7 +23,7 @@ function PromoMenu{
 }
 
 function PromotionCreationMenu{
-    Clear-Host
+    #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Creation Menu ================"
     Write-Host "[1] - Create a unique promotion"
     Write-Host "[2] - Create promotion in bulk"
@@ -31,7 +31,7 @@ function PromotionCreationMenu{
 }
 
 function UserMenu{
-    Clear-Host
+    #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
     Write-Host "[1] - Create users"
     Write-Host "[2] - Disable users"
@@ -39,7 +39,7 @@ function UserMenu{
 }
 
 function UserCreationMenu{
-    Clear-Host
+    #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - User Creation Menu ================"
     Write-Host "[1] - Create a unique user"
     Write-Host "[2] - Create users in bulk"
@@ -47,7 +47,7 @@ function UserCreationMenu{
 }
 
 function UserDisableMenu{
-    Clear-Host
+    #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - User Disable Menu ================"
     Write-Host "[1] - Disable a unique user"
     Write-Host "[2] - Disable users in bulk"
@@ -82,7 +82,56 @@ function TeamsConnect{
     }
 }
 
-function createsinglePromo{
+function CreatePromotion {
+    param (
+        [int]$yearPromotion,
+        [string]$acronymPromotion
+    )
+
+    $namePromotion = "$yearPromotion"+"_"+"$acronymPromotion"
+    $nameGroup = "$acronymPromotion"+"."+"$yearPromotion"
+
+    New-AzureADMSAdministrativeUnit -DisplayName $namePromotion `
+                                    -Description $namePromotion `
+                                    -ErrorAction Stop `
+                                    -ErrorVariable createAUError | Out-Null
+    $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namePromotion'"
+    if ($createAUError) {
+        return $createAUError
+    }
+
+    New-AzureADMSGroup -DisplayName $nameGroup `
+                       -MailEnabled $True `
+                       -Visibility Private `
+                       -MailNickname $nameGroup `
+                       -GroupTypes Unified `
+                       -SecurityEnabled $True `
+                       -ErrorAction Stop `
+                       -ErrorVariable createGroupError | Out-Null
+    $group = Get-AzureADMSGroup -Filter "DisplayName eq '$nameGroup'"
+    if ($createGroupError) {
+        return $createGroupError
+    }
+
+    Add-AzureADMSAdministrativeUnitMember -Id $au.Id `
+                                          -RefObjectId $group.Id `
+                                          -ErrorAction Stop `
+                                          -ErrorVariable addMemberError | Out-Null
+    if ($addMemberError) {
+        return $addMemberError
+    }
+
+    TeamsConnect($Global:AADCredential)
+    New-Team -Group $group.Id `
+             -ErrorAction Stop `
+             -ErrorVariable createTeamError | Out-Null
+    AADConnect($Global:AADCredential)
+    if ($createTeamError) {
+        return $createTeamError
+    }
+}
+
+function CreateSinglePromotion{
     [int]$yearPromotion = Read-Host "Enter the year of the promotion"
     [int]$SelectacronymPromotion = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
     Switch($SelectacronymPromotion){
@@ -91,54 +140,16 @@ function createsinglePromo{
         3{$acronymPromotion = "CPS"}
         4{$acronymPromotion = "ASI"}
     }
-    $namePromotion = "$yearPromotion"+"_"+"$acronymPromotion"
     
-    try{
-        Write-Host "[*] Creation of an administrative unit" -ForegroundColor Yellow
-        New-AzureADMSAdministrativeUnit -DisplayName $namePromotion `
-                                        -Description $namePromotion | Out-Null
-        $idAU = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namePromotion'" 
-        Write-Host "[+] AU $namePromotion created with success" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
+    $result = CreatePromotion -yearPromotion $yearPromotion -acronymPromotion $acronymPromotion
+    if ($result) {
+        Write-Error $result
+    } else {
+        Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
     }
-
-    try{
-        $nameLDS = "$acronymPromotion"+"."+"$yearPromotion"
-        Write-Host "[*] Creation of a Microsoft365 group" -ForegroundColor Yellow
-        New-AzureADMSGroup -DisplayName $nameLDS `
-                           -MailEnabled $True `
-                           -Visibility Private `
-                           -MailNickname $nameLDS `
-                           -GroupTypes Unified `
-                           -SecurityEnabled $True | Out-Null
-        $idGRP = Get-AzureADMSGroup -Filter "DisplayName eq '$nameLDS'"
-        Write-Host "[+] The $nameLDS group successfully created" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
-
-    try{
-        Add-AzureADMSAdministrativeUnitMember -Id $idAU.Id `
-                                              -RefObjectId $idGRP.Id | Out-Null
-        Write-Host "[+] Adding the $namePromotion group in the $namePromotion AU success " -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
-
-    try{
-        Write-Host "[*] Activation of the teams group" -ForegroundColor Yellow
-        TeamsConnect($Global:AADCredential)
-        New-Team -Group $idGRP.Id | Out-Null
-        AADConnect($Global:AADCredential)
-        Write-Host "[+] The Teams $nameLDS group associated with the Microsoft365 group has been activated" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
-    Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
 }
 
-function createbulkPromo{
+function CreatePromotionFromCSV{
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
@@ -146,33 +157,12 @@ function createbulkPromo{
     Foreach($Promo in $dataCSV){
         [int]$yearPromotion = $Promo.yearpromotion
         [string]$acronymPromotion = $Promo.acronympromotion
-        $namePromotion = "$yearPromotion"+"_"+"$acronymPromotion"
-        $nameLDS = "$acronymPromotion"+"."+"$yearPromotion"
-
-        try{
-            Write-Host "[*] Creation of a promotion in progress" -ForegroundColor Yellow
-            New-AzureADMSAdministrativeUnit -DisplayName $namePromotion `
-                                            -Description $namePromotion | Out-Null
-            $idAU = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namePromotion'"
-
-            New-AzureADMSGroup -DisplayName $nameLDS `
-                               -MailEnabled $True `
-                               -Visibility Private `
-                               -MailNickname $nameLDS.ToLower() `
-                               -GroupTypes Unified `
-                               -SecurityEnabled $True | Out-Null
-            $idGRP = Get-AzureADMSGroup -Filter "DisplayName eq '$nameLDS'"
-
-            Add-AzureADMSAdministrativeUnitMember -Id $idAU.Id `
-                                                  -RefObjectId $idGRP.Id | Out-Null
-            
-            TeamsConnect($Global:AADCredential)
-            New-Team -Group $idGRP.Id | Out-Null
-            AADConnect($Global:AADCredential)
+        
+        $result = CreatePromotion -yearPromotion $yearPromotion -acronymPromotion $acronymPromotion
+        if ($result) {
+            Write-Error $result
+        } else {
             Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
-            $counterPromos += 1
-        }catch{
-            Write-Error $Error[0]
         }
     }
     Write-Host "[+] Creation success of $counterPromos promotions" -ForegroundColor Green
@@ -187,97 +177,28 @@ function Get-SkuID{
     return $licenseadd
 }
 
-function createsingleUser{
-    [string]$firstnameUser = Read-Host "Enter the student's first name"
-    [string]$firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
-    [string]$lastnameUser = Read-Host "Enter the student's last name"
-    [string]$lastnameUser = $lastnameUser.ToUpper()
-    [string]$passwordUser = Read-Host "Enter a password (You need at least 8 characters: one number, one upper case, one lower case and one special character)"
+function CreateUser {
+    param (
+        [string]$firstnameUser,
+        [string]$lastnameUser,
+        [string]$passwordUser,
+        [string]$yearpromotionUser,
+        [string]$acronympromotionUser
+    )
+
+    $firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
+    $lastnameUser = $lastnameUser.ToUpper()
     $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
     $passwordprofileUser.Password = $passwordUser
-    [string]$yearpromotionUser = Read-Host "Enter the year of the student's graduation"
-    [string]$acronympromotionUser = Read-Host "Enter the student's class acronym"
-    [string]$uidUser = "U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)
-    [string]$uidUser = $uidUser -replace "\s",""
-    [string]$mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
+    $uidUser = ("U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)) -replace "\s",""
+    $mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
 
-    try{
-        Write-Host "[*] Creation a student account in progress" -ForegroundColor Yellow
-        New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
-                        -GivenName "$firstnameUser" `
-                        -Surname "$lastnameUser" `
-                        -UserPrincipalName "$mailUser" `
-                        -PasswordProfile $passwordprofileUser `
-                        -MailNickname "$firstnameUser.$lastnameUser" `
-                        -JobTitle "Etudiant" `
-                        -Department "$acronympromotionUser $yearpromotionUser" `
-                        -CompanyName "BioDevops" `
-                        -UsageLocation FR `
-                        -UserType Member `
-                        -AccountEnabled $True | Out-Null
-        Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
+    $namepromotionUser = "$yearpromotionUser"+"_"+"$acronympromotionUser"
+    $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
+    $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'"
+    $group = Get-AzureADGroup -Filter "DisplayName eq '$namegroupUser'"
 
-    try{
-        Write-Host "[*] Assignment of a unique identifier" -ForegroundColor Yellow
-        Set-AzureADUserExtension -ObjectId "$mailUser" `
-                                 -ExtensionName "employeeId" `
-                                 -ExtensionValue $uidUser | Out-Null
-        Write-Host "[+] The user $firstnameUser $lastnameUser will have as unique identifier $uidUser" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
-
-    try{
-        Write-Host "[*] Granting of an Office license" -ForegroundColor Yellow
-        $skuidE5 = Get-SkuID
-        Set-AzureADUserLicense -ObjectId "$mailUser" `
-                               -AssignedLicenses $skuidE5 | Out-Null
-        Write-Host "[*] An Office365 E5 license has been assigned to $firstnameUser $lastnameUser' account" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
-
-    try{
-        Write-Host "[*] Assignment of the student to a promotion" -ForegroundColor Yellow
-        $namepromotionUser = "$yearpromotionUser" + "_" + "$acronympromotionUser"
-        $nameldsGroup = "$acronympromotionUser"+"."+"$yearpromotionUser"
-        $idAU = (Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'").Id
-        $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'").ObjectId
-        $idGroup = (Get-AzureADGroup -Filter "DisplayName eq '$nameldsGroup'").ObjectId
-        Add-AzureADMSAdministrativeUnitMember -Id $idAU `
-                                              -RefObjectId $idUser | Out-Null
-        Add-AzureADGroupMember -ObjectId $idGroup `
-                               -RefObjectId $idUser | Out-Null
-        Write-Host "[+] Assignment of the student in the $namepromotionUser success promotion" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
-    }
-}
-
-function createbulkUsers{
-    $pathCSV = Read-Host "Enter the location of your CSV"
-    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
-
-    $counterUsers = 0
-    Foreach ($User in $dataCSV){
-        [string]$firstnameUser = $User.firstname
-        [string]$firstnameUser = $firstnameUser.substring(0, 1).ToUpper()+$firstnameUser.substring(1).ToLower()
-        [string]$lastnameUser = $User.lastname
-        [string]$lastnameUser = $lastnameUser.ToUpper()
-        $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
-        $passwordprofileUser.Password = $User.password
-        [string]$acronympromotionUser = $User.acronympromotion
-        [string]$yearpromotionUser = $User.yearpromotion
-        [string]$uidUser = "U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)
-        [string]$uidUser = $uidUser -replace "\s",""
-        [string]$mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
-        
-        try{
-            Write-Host "[*] Creation a student account in progress" -ForegroundColor Yellow
-            New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
+    New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
                             -GivenName "$firstnameUser" `
                             -Surname "$lastnameUser" `
                             -UserPrincipalName "$mailUser" `
@@ -288,35 +209,88 @@ function createbulkUsers{
                             -CompanyName "BioDevops" `
                             -UsageLocation FR `
                             -UserType Member `
-                            -AccountEnabled $True | Out-Null
+                            -AccountEnabled $True `
+                            -ErrorAction Stop `
+                            -ErrorVariable createUserError | Out-Null
+    $user = Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'"
+    if ($createUserError) {
+        return $createUserError
+    }
 
-            Set-AzureADUserExtension -ObjectId "$mailUser" `
-                                    -ExtensionName "employeeId" `
-                                    -ExtensionValue $uidUser | Out-Null
+    Set-AzureADUserExtension -ObjectId $user.ObjectId `
+                             -ExtensionName "employeeId" `
+                             -ExtensionValue $uidUser `
+                             -ErrorAction Stop `
+                             -ErrorVariable setExtensionError | Out-Null
+    if ($setExtensionError) {
+        return $setExtensionError
+    }
 
-            $skuidE5 = Get-SkuID
-            Set-AzureADUserLicense -ObjectId "$mailUser" `
-                                   -AssignedLicenses $skuidE5 | Out-Null
+    $skuidE5 = Get-SkuID
+    Set-AzureADUserLicense -ObjectId $user.ObjectId `
+                           -AssignedLicenses $skuidE5 `
+                           -ErrorAction Stop `
+                           -ErrorVariable setLicenseError | Out-Null 
+    if ($setLicenseError) {
+        return $setLicenseError
+    }
+
+    Add-AzureADMSAdministrativeUnitMember -Id $au.Id `
+                                          -RefObjectId $user.ObjectId `
+                                          -ErrorAction Stop `
+                                          -ErrorVariable addAUMemberError | Out-Null
+    if ($addAUMemberError) {
+        return $addAUMemberError
+    }
+
+    Add-AzureADGroupMember -ObjectId $group.ObjectId `
+                           -RefObjectId $user.ObjectId `
+                           -ErrorAction Stop `
+                           -ErrorVariable addGroupMemberError | Out-Null
+    if ($addGroupMemberError) {
+        return $addGroupMemberError
+    }
+
+}
+
+function CreateSingleUser{
+    [string]$firstnameUser = Read-Host "Enter the student's first name"
+    [string]$lastnameUser = Read-Host "Enter the student's last name"
+    [string]$passwordUser = Read-Host "Enter a password (You need at least 8 characters: one number, one upper case, one lower case and one special character)"
+    [string]$yearpromotionUser = Read-Host "Enter the year of the student's graduation"
+    [string]$SelectacronympromotionUser = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
+    Switch($SelectacronympromotionUser){
+        1{$acronympromotionUser = "PSSI"}
+        2{$acronympromotionUser = "GPP"}
+        3{$acronympromotionUser = "CPS"}
+        4{$acronympromotionUser = "ASI"}
+    }
+
+    $result = CreateUser -firstnameUser $firstnameUser -lastnameUser $lastnameUser -passwordUser $passwordUser -yearpromotionUser $yearpromotionUser -acronympromotionUser $acronympromotionUser
+    if ($result) {
+        Write-Error $result
+    } else {
+        Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
+    }   
+}
+
+function CreateUserFromCSV{
+    $pathCSV = Read-Host "Enter the location of your CSV"
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
+
+    $counterUsers = 0
+    Foreach ($User in $dataCSV){
+        [string]$firstnameUser = $User.firstname
+        [string]$lastnameUser = $User.lastname
+        [string]$passwordUser = $User.password
+        [string]$acronympromotionUser = $User.acronympromotion
+        [string]$yearpromotionUser = $User.yearpromotion
+        
+        $result = CreateUser -firstnameUser $firstnameUser -lastnameUser $lastnameUser -passwordUser $passwordUser -yearpromotionUser $yearpromotionUser -acronympromotionUser $acronympromotionUser
+        if ($result) {
+            Write-Error $result
+        } else {
             Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
-            $counterUsers += 1
-        }catch{
-            Write-Error $Error[0]
-        }
-
-        try{
-            Write-Host "[*] Assignment of the student to a promotion" -ForegroundColor Yellow
-            $namepromotionUser = "$yearpromotionUser" + "_" + "$acronympromotionUser"
-            $nameldsGroup = "$acronympromotionUser"+"."+"$yearpromotionUser"
-            $idAU = (Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'").Id
-            $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'").ObjectId
-            $idGroup = (Get-AzureADGroup -Filter "DisplayName eq '$nameldsGroup'").ObjectId
-            Add-AzureADMSAdministrativeUnitMember -Id $idAU `
-                                                  -RefObjectId $idUser | Out-Null
-            Add-AzureADGroupMember -ObjectId $idGroup `
-                                   -RefObjectId $idUser | Out-Null
-            Write-Host "[+] Assignment of the student in the $namepromotionUser success promotion" -ForegroundColor Green
-        }catch{
-            Write-Error $Error[0]
         }
     }
     Write-Host "[+] Creation success of $counterUsers users" -ForegroundColor Green
@@ -375,8 +349,8 @@ do{
                         PromotionCreationMenu
                         [int]$PromoCreateMenu = Read-Host "Enter an action"
                         Switch($PromoCreateMenu){
-                            1{createsinglePromo}
-                            2{createbulkPromo}
+                            1{CreateSinglePromotion}
+                            2{CreatePromotionFromCSV}
                             0{break}
                         }
                     }until($PromoCreateMenu -eq 0)
@@ -395,8 +369,8 @@ do{
                         UserCreationMenu
                         [int]$UserCreateMenu = Read-Host "Enter an action"
                         Switch($UserCreateMenu){
-                            1{createsingleUser}
-                            2{createbulkUsers}
+                            1{CreateSingleUser}
+                            2{CreateUserFromCSV}
                             0{break}
                         }
                     }until($UserCreateMenu -eq 0)
