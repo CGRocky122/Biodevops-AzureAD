@@ -170,7 +170,7 @@ function CreatePromotionFromCSV{
     }
 }
 
-# Create User
+# Get SkuID of E5
 function Get-SkuID{
     $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense 
     $planname = "DEVELOPERPACK_E5"
@@ -180,6 +180,7 @@ function Get-SkuID{
     return $licenseadd
 }
 
+# Create User
 function CreateUser {
     param (
         [string]$firstnameUser,
@@ -193,8 +194,12 @@ function CreateUser {
     $lastnameUser = $lastnameUser.ToUpper()
     $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
     $passwordprofileUser.Password = $passwordUser
-    $uidUser = ("U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)) -replace "\s",""
     $mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
+
+    do {
+        $uidUser = ("U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)) -replace "\s",""
+        $result = CheckEmployeeID -UID $uidUser
+    } until ($result -eq $True)
 
     $namepromotionUser = "$yearpromotionUser"+"_"+"$acronympromotionUser"
     $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
@@ -256,7 +261,7 @@ function CreateUser {
 
 }
 
-function CreateSingleUser{
+function CreateSingleUser {
     [string]$firstnameUser = Read-Host "Enter the student's first name"
     [string]$lastnameUser = Read-Host "Enter the student's last name"
     [string]$passwordUser = Read-Host "Enter a password (You need at least 8 characters: one number, one upper case, one lower case and one special character)"
@@ -277,7 +282,7 @@ function CreateSingleUser{
     }   
 }
 
-function CreateUserFromCSV{
+function CreateUserFromCSV {
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
@@ -293,6 +298,23 @@ function CreateUserFromCSV{
             Write-Error $result
         } else {
             Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
+        }
+    }
+}
+
+# Check User's EmployeeID
+function CheckEmployeeID {
+    param (
+        [string]$UID
+    )
+
+    $users = Get-AzureADuserExtension | Out-Null
+
+    Foreach ($u in $users) {
+        if ($u.employeeId -eq $UID){
+            return $false
+        } else {
+            return $True
         }
     }
 }
@@ -314,7 +336,7 @@ function DisableUser {
     }
 }
 
-function DisableSingleUser{
+function DisableSingleUser {
     [string]$upnUser = Read-Host "Enter the UPN of the disabled user"
     
     $result = DisableUser -upnUser $upnUser
@@ -325,7 +347,7 @@ function DisableSingleUser{
     }
 }
 
-function DisableUserFromCSV{
+function DisableUserFromCSV {
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
