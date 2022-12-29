@@ -12,6 +12,7 @@ function MainMenu{
     Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
     Write-Host "[1] - Promotions menu"
     Write-Host "[2] - Users menu"
+    Write-Host "[3] - Delegate menu"
     Write-Host "[0] - Exit"
 
 }
@@ -53,6 +54,14 @@ function UserDisableMenu{
     Write-Host "`n================ Biodevops - AzureAD management - User Disable Menu ================"
     Write-Host "[1] - Disable a unique user"
     Write-Host "[2] - Disable users in bulk"
+    Write-Host "[0] - Return to main menu"
+}
+
+function DelegateMenu {
+    #Clear-Host
+    Write-Host "`n================ Biodevops - AzureAD management - Delegate Menu ================"
+    Write-Host "[1] - Assign delegate to unique user"
+    Write-Host "[2] - Assign delegate to a whole promotion"
     Write-Host "[0] - Return to main menu"
 }
 
@@ -308,15 +317,16 @@ function CheckEmployeeID {
         [string]$UID
     )
 
-    $users = Get-AzureADuserExtension | Out-Null
+    $users = Get-AzureADUser
 
-    Foreach ($u in $users) {
+    Foreach ($u in $users) { 
+        $u = Get-AzureADUserExtension -ObjectId $u.ObjectId
         if ($u.employeeId -eq $UID){
-            return $false
-        } else {
-            return $True
+            return $False
+            break
         }
     }
+    return $True
 }
 
 # Disable User
@@ -363,6 +373,64 @@ function DisableUserFromCSV {
     }
 }
 
+function SetManager {
+    param (
+        [string]$upnUser,
+        [string]$upnDelegate
+    )
+ 
+    $delegate = Get-AzureADUser -Filter "UserPrincipalName eq '$upnDelegate'"
+    $user = Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'"
+    
+    Set-AzureADUserManager -ObjectId $user.ObjectId `
+                           -RefObjectId $delegate.ObjectId `
+                           -ErrorAction Stop `
+                           -ErrorVariable setManagerError | Out-Null
+    if ($setManagerError) {
+        return $setManagerError
+    }
+}
+
+function SetUserManager {
+    [string]$upnUser = Read-Host "Enter the student's UPN"
+    [string]$upnDelegate = Read-host "Enter the delegate's UPN"
+
+    $result = SetManager -upnUser $upnUser -upnDelegate $upnDelegate
+    if ($result) {
+        Write-Error $result
+    } else {
+        Write-Host "[+]"((Get-AzureADUser -Filter "UserPrincipalName eq '$upnDelegate'").DisplayName)"is now the delegate of"((Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").DisplayName) -ForegroundColor Green
+    }
+}
+
+function SetPromotionManager {
+    [int]$yearPromotion = Read-Host "Enter the year of the promotion"
+    [int]$SelectacronymPromotion = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
+    Switch($SelectacronymPromotion){
+        1{$acronymPromotion = "PSSI"}
+        2{$acronymPromotion = "GPP"}
+        3{$acronymPromotion = "CPS"}
+        4{$acronymPromotion = "ASI"}
+    }
+    [string]$upnDelegate = Read-Host "Enter the delegate's UPN"
+    
+    $nameGroup = "$acronymPromotion"+"."+"$yearPromotion"
+    $namePromotion = "$yearPromotion"+"_"+"$acronymPromotion"
+
+    $Promotion = Get-AzureADGroupMember -ObjectId (Get-AzureADGroup -Filter "DisplayName eq '$nameGroup'").ObjectId | Select-Object UserPrincipalName
+
+    Foreach ($User in $Promotion) {
+        $User = $user.UserPrincipalName
+        if ($User -eq $upnDelegate) {
+            continue
+        }
+        $result = SetManager -upnUser $User -upnDelegate $upnDelegate
+        if ($result) {
+            Write-Error $result
+        }
+    }
+    Write-Host "[+]"((Get-AzureADUser -Filter "UserPrincipalName eq '$upnDelegate'").DisplayName)"is now the delegate for the promotion of"((Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namePromotion'").DisplayName) -ForegroundColor Green
+}
 
 # ======== MAIN ========
 require
@@ -373,58 +441,69 @@ do{
     MainMenu
     [int]$MainMenu = Read-Host "Enter an action"
     Switch($MainMenu){
-    1{
-        do{
-            PromoMenu
-            [int]$PromoMenu = Read-Host "Enter an action"
-            Switch($PromoMenu){
-                1{
-                    do {
-                        PromotionCreationMenu
-                        [int]$PromoCreateMenu = Read-Host "Enter an action"
-                        Switch($PromoCreateMenu){
-                            1{CreateSinglePromotion}
-                            2{CreatePromotionFromCSV}
-                            0{break}
-                        }
-                    }until($PromoCreateMenu -eq 0)
+        1{
+            do{
+                PromoMenu
+                [int]$PromoMenu = Read-Host "Enter an action"
+                Switch($PromoMenu){
+                    1{
+                        do {
+                            PromotionCreationMenu
+                            [int]$PromoCreateMenu = Read-Host "Enter an action"
+                            Switch($PromoCreateMenu){
+                                1{CreateSinglePromotion}
+                                2{CreatePromotionFromCSV}
+                                0{break}
+                            }
+                        }until($PromoCreateMenu -eq 0)
+                    }
+                    0{break}
                 }
-                0{break}
-            }
-        }until($PromoMenu -eq 0)
-    }
-    2{
-        do{
-            UserMenu
-            [int]$UserMenu = Read-Host "Enter an action"
-            Switch($UserMenu){
-                1{
-                    do{
-                        UserCreationMenu
-                        [int]$UserCreateMenu = Read-Host "Enter an action"
-                        Switch($UserCreateMenu){
-                            1{CreateSingleUser}
-                            2{CreateUserFromCSV}
-                            0{break}
-                        }
-                    }until($UserCreateMenu -eq 0)
+            }until($PromoMenu -eq 0)
+        }
+        2{
+            do{
+                UserMenu
+                [int]$UserMenu = Read-Host "Enter an action"
+                Switch($UserMenu){
+                    1{
+                        do{
+                            UserCreationMenu
+                            [int]$UserCreateMenu = Read-Host "Enter an action"
+                            Switch($UserCreateMenu){
+                                1{CreateSingleUser}
+                                2{CreateUserFromCSV}
+                                0{break}
+                            }
+                        }until($UserCreateMenu -eq 0)
+                    }
+                    2{
+                        do{
+                            UserDisableMenu
+                            [int]$UserDisableMenu = Read-Host "Enter an Action"
+                            Switch($UserDisableMenu){
+                                1{DisableSingleUser}
+                                2{DisableUserFromCSV}
+                                0{break}
+                            }
+                        }until($UserDisableMenu -eq 0)
+                    }
+                    0{break}
                 }
-                2{
-                    do{
-                        UserDisableMenu
-                        [int]$UserDisableMenu = Read-Host "Enter an Action"
-                        Switch($UserDisableMenu){
-                            1{desactivatesingleUser}
-                            2{desactivatebulkUsers}
-                            0{break}
-                        }
-                    }until($UserDisableMenu -eq 0)
+            }until($UserMenu -eq 0)
+        }
+        3{
+            do{
+                DelegateMenu
+                [int]$DelegateMenu = Read-Host "Enter an action"
+                Switch($DelegateMenu){
+                    1{SetUserManager}
+                    2{SetPromotionManager}
+                    0{break}
                 }
-                0{break}
-            }
-        }until($UserMenu -eq 0)
-    }
-    0{break}
+            }until($DelegateMenu -eq 0)
+        }
+        0{break}
     }
 }until($MainMenu -eq 0)
 
