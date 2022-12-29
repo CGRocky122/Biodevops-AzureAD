@@ -56,7 +56,7 @@ function UserDisableMenu{
     Write-Host "[0] - Return to main menu"
 }
 
-# Connection module Microsoft
+# Connection modules Microsoft
 function AADConnect{
     param(
         [PSCredential]$Credential
@@ -85,7 +85,7 @@ function TeamsConnect{
     }
 }
 
-# Promotion
+# Create Promotion
 function CreatePromotion {
     param (
         [int]$yearPromotion,
@@ -157,7 +157,6 @@ function CreatePromotionFromCSV{
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
-    $counterPromos = 0
     Foreach($Promo in $dataCSV){
         [int]$yearPromotion = $Promo.yearpromotion
         [string]$acronymPromotion = $Promo.acronympromotion
@@ -169,10 +168,9 @@ function CreatePromotionFromCSV{
             Write-Host "[+] The $acronymPromotion of $yearPromotion has been created" -ForegroundColor Green
         }
     }
-    Write-Host "[+] Creation success of $counterPromos promotions" -ForegroundColor Green
 }
 
-# User
+# Create User
 function Get-SkuID{
     $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense 
     $planname = "DEVELOPERPACK_E5"
@@ -283,7 +281,6 @@ function CreateUserFromCSV{
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
-    $counterUsers = 0
     Foreach ($User in $dataCSV){
         [string]$firstnameUser = $User.firstname
         [string]$lastnameUser = $User.lastname
@@ -298,42 +295,52 @@ function CreateUserFromCSV{
             Write-Host "[+] The account of the student $firstnameUser $lastnameUser has been successfully created" -ForegroundColor Green
         }
     }
-    Write-Host "[+] Creation success of $counterUsers users" -ForegroundColor Green
 }
 
-function desactivatesingleUser{
-    [string]$upnUser = Read-Host "Enter the UPN of the disabled user"
-    $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").ObjectId
+# Disable User
+function DisableUser {
+    param (
+        [string]$upnUser
+    )
 
-    try{
-        Write-Host "[*] Deactivation of a user" -ForegroundColor Yellow
-        Set-AzureADUser -ObjectId $idUser `
-                        -AccountEnabled $False | Out-Null
-        Write-Host "[+] The account of the student "((Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").DisplayName)" has been successfully deactivated" -ForegroundColor Green
-    }catch{
-        Write-Error $Error[0]
+    $user = Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'"
+
+    Set-AzureADUser -ObjectId $user.ObjectId `
+                    -AccountEnabled $False `
+                    -ErrorAction Stop `
+                    -ErrorVariable setUserError | Out-Null
+    if ($setUserError) {
+        return $setUserError
     }
 }
 
-function desactivatebulkUsers{
+function DisableSingleUser{
+    [string]$upnUser = Read-Host "Enter the UPN of the disabled user"
+    
+    $result = DisableUser -upnUser $upnUser
+    if ($result) {
+        Write-Error $result
+    } else {
+        Write-Host "[+] The account of the student"((Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").DisplayName)"has been successfully deactivated" -ForegroundColor Green
+    }
+}
+
+function DisableUserFromCSV{
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
-    $counterUser = 0
     Foreach($User in $dataCSV){
         [string]$upnUser = $User.UPN
-        $idUser = (Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").ObjectId
 
-        try{
-            Set-AzureADUser -ObjectId $idUser `
-                            -AccountEnabled $False | Out-Null
-        }catch{
-            Write-Error $Error[0]
+        $result = DisableUser -upnUser $upnUser
+        if ($result) {
+            Write-Error $result
+        } else {
+            Write-Host "[+] The account of the student"((Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'").DisplayName)"has been successfully deactivated" -ForegroundColor Green
         }
-        $counterUser += 1
     }
-    Write-Host "[+] Successful deactivation of $counterUser accounts" -ForegroundColor Green
 }
+
 
 # ======== MAIN ========
 require
