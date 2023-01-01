@@ -1,5 +1,5 @@
 # Prerequisites
-function require{
+function require {
     Install-Module -Name MSOnline
     Install-Module -Name AzureAD
     Install-Module -Name ExchangeOnline
@@ -7,7 +7,7 @@ function require{
 }
 
 # Menus
-function MainMenu{
+function MainMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
     Write-Host "[1] - Promotions menu"
@@ -17,7 +17,7 @@ function MainMenu{
 
 }
 
-function PromoMenu{
+function PromoMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Menu ================"
     Write-Host "[1] - Create promotions"
@@ -25,7 +25,7 @@ function PromoMenu{
     Write-Host "[0] - Return to main menu"
 }
 
-function PromotionCreationMenu{
+function PromotionCreationMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Creation Menu ================"
     Write-Host "[1] - Create a unique promotion"
@@ -33,7 +33,7 @@ function PromotionCreationMenu{
     Write-Host "[0] - Return to main menu"
 }
 
-function UserMenu{
+function UserMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
     Write-Host "[1] - Create users"
@@ -41,7 +41,7 @@ function UserMenu{
     Write-Host "[0] - Return to main menu"
 }
 
-function UserCreationMenu{
+function UserCreationMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - User Creation Menu ================"
     Write-Host "[1] - Create a unique user"
@@ -49,7 +49,7 @@ function UserCreationMenu{
     Write-Host "[0] - Return to main menu"
 }
 
-function UserDisableMenu{
+function UserDisableMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - User Disable Menu ================"
     Write-Host "[1] - Disable a unique user"
@@ -66,7 +66,7 @@ function DelegateMenu {
 }
 
 # Connection modules Microsoft
-function AADConnect{
+function AADConnect {
     param(
         [PSCredential]$Credential
     )
@@ -78,11 +78,11 @@ function AADConnect{
     }
 }
 
-function AADDisconnect{
+function AADDisconnect {
     Disconnect-AzureAD
 }
 
-function TeamsConnect{
+function TeamsConnect {
     param(
         [PSCredential]$Credential
     )
@@ -144,7 +144,7 @@ function CreatePromotion {
     }
 }
 
-function CreateSinglePromotion{
+function CreateSinglePromotion {
     [int]$yearPromotion = Read-Host "Enter the year of the promotion"
     [int]$SelectacronymPromotion = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
     Switch($SelectacronymPromotion){
@@ -162,7 +162,7 @@ function CreateSinglePromotion{
     }
 }
 
-function CreatePromotionFromCSV{
+function CreatePromotionFromCSV {
     $pathCSV = Read-Host "Enter the location of your CSV"
     $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
@@ -180,7 +180,7 @@ function CreatePromotionFromCSV{
 }
 
 # Get SkuID of E5
-function Get-SkuID{
+function Get-SkuID {
     $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense 
     $planname = "DEVELOPERPACK_E5"
     $licenseadd = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicenses
@@ -373,6 +373,7 @@ function DisableUserFromCSV {
     }
 }
 
+# Set Manager
 function SetManager {
     param (
         [string]$upnUser,
