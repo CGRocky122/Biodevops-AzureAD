@@ -38,6 +38,7 @@ function UserMenu {
     Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
     Write-Host "[1] - Create users"
     Write-Host "[2] - Disable users"
+    Write-Host "[3] - Change promotion"
     Write-Host "[0] - Return to main menu"
 }
 
@@ -55,6 +56,14 @@ function UserDisableMenu {
     Write-Host "[1] - Disable a unique user"
     Write-Host "[2] - Disable users in bulk"
     Write-Host "[0] - Return to main menu"
+}
+
+function ChangeUserPromotion {
+       #Clear-Host
+       Write-Host "`n================ Biodevops - AzureAD management - Change User's promotion Menu ================"
+       Write-Host "[1] - Change a unique user"
+       Write-Host "[2] - Change users in bulk"
+       Write-Host "[0] - Return to main menu" 
 }
 
 function DelegateMenu {
@@ -274,7 +283,7 @@ function CreateSingleUser {
     [string]$firstnameUser = Read-Host "Enter the student's first name"
     [string]$lastnameUser = Read-Host "Enter the student's last name"
     [string]$passwordUser = Read-Host "Enter a password (You need at least 8 characters: one number, one upper case, one lower case and one special character)"
-    [string]$yearpromotionUser = Read-Host "Enter the year of the student's graduation"
+    [string]$yearpromotionUser = Read-Host "Enter the year of the student's promotion"
     [string]$SelectacronympromotionUser = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
     Switch($SelectacronympromotionUser){
         1{$acronympromotionUser = "PSSI"}
@@ -436,11 +445,11 @@ function SetPromotionManager {
 # Change Promotion
 function ChangePromotion {
     param (
-        [string]$oldPromotion,
-        [string]$oldGroup,
-        [string]$newPromotion,
-        [string]$newGroup,
-        [string]$User
+        $oldPromotion,
+        $oldGroup,
+        $newPromotion,
+        $newGroup,
+        $User
     )
 
     $oldPromotion = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$oldPromotion'"
@@ -450,7 +459,7 @@ function ChangePromotion {
     $User = Get-AzureADUser -Filter "UserPrincipalName eq '$User'"
 
     Remove-AzureADUserManager -ObjectId $User.ObjectId `
-                              -ErrorAction Stop `
+                              -ErrorAction Continue `
                               -ErrorVariable removeManagerError | Out-Null
     if ($removeManagerError) {
         return $removeManagerError
@@ -473,7 +482,7 @@ function ChangePromotion {
     }
 
     Add-AzureADMSAdministrativeUnitMember -Id $newPromotion.Id `
-                                          -MemberId $User.ObjectId `
+                                          -RefObjectId $User.ObjectId `
                                           -ErrorAction Stop `
                                           -ErrorVariable addAUMemberError | Out-Null
     if ($addAUMemberError) {
@@ -481,7 +490,7 @@ function ChangePromotion {
     }
 
     Add-AzureADGroupMember -ObjectId $newGroup.Id `
-                           -MemberId $User.ObjectId `
+                           -RefObjectId $User.ObjectId `
                            -ErrorAction Stop `
                            -ErrorVariable addGroupMemberError | Out-Null
     if ($addGroupMemberError) {
@@ -490,11 +499,62 @@ function ChangePromotion {
 }
 
 function ChangePromotionSingleUser {
+    [string]$User = Read-Host "Enter the user's UPN"
+    Write-Host "`nInformation of the former promotion"
+    [string]$oldYearPromotion = Read-Host "Enter the year of the student's promotion"
+    [string]$selectoldAcronymPromotion = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
+    Switch($selectoldAcronymPromotion){
+        1{$oldAcronymPromotion = "PSSI"}
+        2{$oldAcronymPromotion = "GPP"}
+        3{$oldAcronymPromotion = "CPS"}
+        4{$oldAcronymPromotion = "ASI"}
+    }
+    Write-Host "`nInformation of the new promotion"
+    [string]$newYearPromotion = Read-Host "Enter the year of the student's promotion"
+    [string]$selectnewAcronymPromotion = Read-Host "[1] - PSSI - Pentesting & Security of Information Systems`n[2] - GPP - Public and Private Cloud Manager`n[3] - CPS - Project Management and Strategy`n[4] - ASI - Information Systems Architecture`nEnter a field of study"
+    Switch($selectnewAcronymPromotion){
+        1{$newAcronymPromotion = "PSSI"}
+        2{$newAcronymPromotion = "GPP"}
+        3{$newAcronymPromotion = "CPS"}
+        4{$newAcronymPromotion = "ASI"}
+    }
 
+    $oldPromotionName = "$oldYearPromotion"+"_"+"$oldAcronymPromotion"
+    $oldGroupName = "$oldAcronymPromotion"+"."+"$oldYearPromotion"
+    $newPromotionName = "$newYearPromotion"+"_"+"$newAcronymPromotion"
+    $newGroupName = "$newAcronymPromotion"+"."+"$newYearPromotion"
+
+    $result = ChangePromotion -oldPromotion $oldPromotionName -oldGroup $oldGroupName -newPromotion $newPromotionName -newGroup $newGroupName -User $User
+    if ($result) {
+        Write-Error $result
+    } else {
+        Write-Host "[+] Student"((Get-AzureADUser -Filter "UserPrincipalName eq '$User'").DisplayName)"passed from the class of $oldPromotionName to $newPromotionName" -ForegroundColor Green
+    }
 }
 
 function ChangePromotionFromCSV {
+    $pathCSV = Read-Host "Enter the location of your CSV"
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
 
+    Foreach($U in $dataCSV){
+        [string]$oldYearPromotion = $U.oldYearPromotion
+        [string]$oldAcronymPromotion = $U.oldAcronymPromotion
+        [string]$newYearPromotion = $U.newYearPromotion
+        [string]$newAcronymPromotion = $U.newAcronymPromotion
+        [string]$User = $U.UPN
+
+        $oldPromotionName = "$oldYearPromotion"+"_"+"$oldAcronymPromotion"
+        $oldGroupName = "$oldAcronymPromotion"+"."+"$oldYearPromotion"
+        $newPromotionName = "$newYearPromotion"+"_"+"$newAcronymPromotion"
+        $newGroupName = "$newAcronymPromotion"+"."+"$newYearPromotion"
+
+        $result = ChangePromotion -oldPromotion $oldPromotionName -oldGroup $oldGroupName -newPromotion $newPromotionName -newGroup $newGroupName -User $User
+        if ($result) {
+            Write-Error $result
+        } else {
+            Write-Host "[+] Student"((Get-AzureADUser -Filter "UserPrincipalName eq '$User'").DisplayName)"passed from the class of $oldPromotionName to $newPromotionName"
+        }
+    }
 }
 
 # ======== MAIN ========
@@ -552,6 +612,17 @@ do{
                                 0{break}
                             }
                         }until($UserDisableMenu -eq 0)
+                    }
+                    3{
+                        do {
+                            ChangeUserPromotion
+                            [int]$ChangeUserPromotion = Read-Host "Enter an action"
+                            Switch($ChangeUserPromotion){
+                                1{ChangePromotionSingleUser}
+                                2{ChangePromotionFromCSV}
+                                0{break}
+                            }
+                        }until($ChangeUserPromotion -eq 0)
                     }
                     0{break}
                 }
