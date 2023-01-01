@@ -433,6 +433,70 @@ function SetPromotionManager {
     Write-Host "[+]"((Get-AzureADUser -Filter "UserPrincipalName eq '$upnDelegate'").DisplayName)"is now the delegate for the promotion of"((Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namePromotion'").DisplayName) -ForegroundColor Green
 }
 
+# Change Promotion
+function ChangePromotion {
+    param (
+        [string]$oldPromotion,
+        [string]$oldGroup,
+        [string]$newPromotion,
+        [string]$newGroup,
+        [string]$User
+    )
+
+    $oldPromotion = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$oldPromotion'"
+    $oldGroup = Get-AzureADMSGroup -Filter "DisplayName eq '$oldGroup'"
+    $newPromotion = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$newPromotion'"
+    $newGroup = Get-AzureADMSGroup -Filter "DisplayName eq '$newGroup'"
+    $User = Get-AzureADUser -Filter "UserPrincipalName eq '$User'"
+
+    Remove-AzureADUserManager -ObjectId $User.ObjectId `
+                              -ErrorAction Stop `
+                              -ErrorVariable removeManagerError | Out-Null
+    if ($removeManagerError) {
+        return $removeManagerError
+    }
+
+    Remove-AzureADMSAdministrativeUnitMember -Id $oldPromotion.Id `
+                                             -MemberId $User.ObjectId `
+                                             -ErrorAction Stop `
+                                             -ErrorVariable removeAUMemberError | Out-Null
+    if ($removeAUMemberError) {
+        return $removeAUMemberError
+    }
+
+    Remove-AzureADGroupMember -ObjectId $oldGroup.Id `
+                              -MemberId $User.ObjectId `
+                              -ErrorAction Stop `
+                              -ErrorVariable removeGroupMemberError | Out-Null
+    if ($removeGroupMemberError) {
+        return $removeGroupMemberError
+    }
+
+    Add-AzureADMSAdministrativeUnitMember -Id $newPromotion.Id `
+                                          -MemberId $User.ObjectId `
+                                          -ErrorAction Stop `
+                                          -ErrorVariable addAUMemberError | Out-Null
+    if ($addAUMemberError) {
+        return $addAUMemberError
+    }
+
+    Add-AzureADGroupMember -ObjectId $newGroup.Id `
+                           -MemberId $User.ObjectId `
+                           -ErrorAction Stop `
+                           -ErrorVariable addGroupMemberError | Out-Null
+    if ($addGroupMemberError) {
+        return $addGroupMemberError
+    }
+}
+
+function ChangePromotionSingleUser {
+
+}
+
+function ChangePromotionFromCSV {
+
+}
+
 # ======== MAIN ========
 require
 $Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
