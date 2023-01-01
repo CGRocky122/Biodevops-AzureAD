@@ -1,8 +1,6 @@
 # Prerequisites
 function require {
-    Install-Module -Name MSOnline
     Install-Module -Name AzureAD
-    Install-Module -Name ExchangeOnline
     Install-Module -Name MicrosoftTeams
 }
 
