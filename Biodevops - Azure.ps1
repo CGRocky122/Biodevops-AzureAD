@@ -101,6 +101,15 @@ function TeamsConnect {
     }
 }
 
+# Replace wrong characters
+function Remove-StringLatinCharacters {
+    param (
+        [string]$String
+    )
+
+    [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($String))
+}
+
 # Create Promotion
 function CreatePromotion {
     param (
@@ -210,7 +219,7 @@ function CreateUser {
     $lastnameUser = $lastnameUser.ToUpper()
     $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
     $passwordprofileUser.Password = $passwordUser
-    $mailUser = $firstnameUser.ToLower()+"."+$lastnameUser.ToLower()+"@biodevops.tech"
+    $mailUser = (Remove-StringLatinCharacters($firstnameUser.ToLower()))+"."+(Remove-StringLatinCharacters($lastnameUser.ToLower()))+"@biodevops.tech"
 
     do {
         $uidUser = ("U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)) -replace "\s",""
