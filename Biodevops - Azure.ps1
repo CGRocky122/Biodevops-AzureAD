@@ -459,6 +459,7 @@ function ChangePromotion {
         $User
     )
 
+    $newDepartment = $newGroup.replace("."," ")
     $oldPromotion = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$oldPromotion'"
     $oldGroup = Get-AzureADMSGroup -Filter "DisplayName eq '$oldGroup'"
     $newPromotion = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$newPromotion'"
@@ -502,6 +503,14 @@ function ChangePromotion {
                            -ErrorVariable addGroupMemberError | Out-Null
     if ($addGroupMemberError) {
         return $addGroupMemberError
+    }
+
+    Set-AzureADUser -ObjectId $User.ObjectId `
+                    -Department $newDepartment `
+                    -ErrorAction Stop `
+                    -ErrorVariable setUserDepartmentError | Out-Null
+    if ($setUserDepartmentError) {
+        return $setUserDepartmentError
     }
 }
 
