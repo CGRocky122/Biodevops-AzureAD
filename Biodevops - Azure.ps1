@@ -74,14 +74,18 @@ function DelegateMenu {
 
 # Connection modules Microsoft
 function AADConnect {
-    param(
-        [PSCredential]$Credential
-    )
+
+    $Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
 
     try{
-        Connect-AzureAD -Credential $Credential | Out-Null
+        Connect-AzureAD -Credential $Global:AADCredential | Out-Null
     }catch{
-        Write-Error $Error[0]
+        Write-Error "Failed to connect to AzureAD"
+        $SelectAzureAD = Read-Host "Would you like to retry ?"
+        Switch($SelectAzureAD) {
+            "Y"{AADConnect}
+            "N"{break}
+        }
     }
 }
 
@@ -617,8 +621,7 @@ function ChangePromotionFromCSV {
 
 # ======== MAIN ========
 require
-$Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
-AADConnect($Global:AADCredential)
+AADConnect
 
 do{
     MainMenu
