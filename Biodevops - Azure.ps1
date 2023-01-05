@@ -120,6 +120,8 @@ function CreatePromotion {
     $namePromotion = "$yearPromotion"+"_"+"$acronymPromotion"
     $nameGroup = "$acronymPromotion"+"."+"$yearPromotion"
 
+    Write-Warning "[*] Creating a new promotion in progress"
+
     New-AzureADMSAdministrativeUnit -DisplayName $namePromotion `
                                     -Description $namePromotion `
                                     -ErrorAction Stop `
@@ -243,6 +245,8 @@ function CreateUser {
                 $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
                 $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'"
                 $group = Get-AzureADGroup -Filter "DisplayName eq '$namegroupUser'"
+
+                Write-Warning = "[*] Creating a new user in progress"
 
                 New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
                                 -GivenName "$firstnameUser" `
@@ -385,6 +389,8 @@ function DisableUser {
 
     $user = Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'"
 
+    Write-Warning "[*] Deactivation of a user in progress"
+
     Set-AzureADUser -ObjectId $user.ObjectId `
                     -AccountEnabled $False `
                     -ErrorAction Stop `
@@ -431,6 +437,8 @@ function SetManager {
     $delegate = Get-AzureADUser -Filter "UserPrincipalName eq '$upnDelegate'"
     $user = Get-AzureADUser -Filter "UserPrincipalName eq '$upnUser'"
     
+    Write-Warning "[*] Assignment of a delegate in progress"
+
     Set-AzureADUserManager -ObjectId $user.ObjectId `
                            -RefObjectId $delegate.ObjectId `
                            -ErrorAction Stop `
@@ -497,6 +505,8 @@ function ChangePromotion {
     $newPromotion = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$newPromotion'"
     $newGroup = Get-AzureADMSGroup -Filter "DisplayName eq '$newGroup'"
     $User = Get-AzureADUser -Filter "UserPrincipalName eq '$User'"
+
+    Write-Warning "[*] Promotion change in progress"
 
     Remove-AzureADUserManager -ObjectId $User.ObjectId `
                               -ErrorAction Continue `
