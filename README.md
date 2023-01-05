@@ -10,16 +10,16 @@ L'objectif était de réalisé un script permettant à des équipes IT de faire 
 
 ## :wrench: Compatibilité ##
 
-:heavy_minus_sign: Active Directory;\
-:heavy_plus_sign: Azure Active Directory;
+:heavy_minus_sign: Active Directory\
+:heavy_plus_sign: Azure Active Directory
 
 
 ## :sparkles: Fonctionnalités ##
 
-:heavy_check_mark: Création d'une promotion de A à Z;\
-:heavy_check_mark: Création et désactivation d'un compte d'étudiant de manière unique ou via CSV;\
-:heavy_check_mark: Assignation de délégué par étudiant ou promotion;\
-:heavy_check_mark: Gestion des doublons;
+:heavy_check_mark: Création d'une promotion de A à Z\
+:heavy_check_mark: Création et désactivation d'un compte d'étudiant de manière unique ou via CSV\
+:heavy_check_mark: Assignation de délégué par étudiant ou promotion\
+:heavy_check_mark: Gestion des doublons
 
 
 ## :rocket: Technologies ##
