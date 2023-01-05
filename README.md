@@ -8,18 +8,18 @@ Rendu de projet 4 SRC2 Groupe 2 pour le cours de PowerShell.
 L'objectif était de réalisé un script permettant à des équipes IT de faire de la génération et de la gestion d'une base d'identité AD/AzureAD.
 
 
-## :wrench: Compatibilité ##
+## :wrench: Compatibilités ##
 
-:heavy_minus_sign: Active Directory\
-:heavy_plus_sign: Azure Active Directory
+:x: Active Directory\
+:heavy_check_mark: Azure Active Directory
 
 
 ## :sparkles: Fonctionnalités ##
 
-:heavy_check_mark: Création d'une promotion de A à Z\
-:heavy_check_mark: Création et désactivation d'un compte d'étudiant de manière unique ou via CSV\
-:heavy_check_mark: Assignation de délégué par étudiant ou promotion\
-:heavy_check_mark: Gestion des doublons
+:star2: Création d'une promotion de A à Z\
+:star2: Création et désactivation d'un compte d'étudiant de manière unique ou via CSV\
+:star2: Assignation de délégué par étudiant ou promotion\
+:star2: Gestion des doublons
 
 
 ## :rocket: Technologies ##
@@ -37,7 +37,8 @@ Et la base de connaissance suivante :
 
 Avant de commercer, vous devez avoir l'application [Windows Terminal](https://www.microsoft.com/store/productId/9N0DX20HK701) d'installer.
 Comme le script est conçu pour de l'administration d'[AzureAD](https://azure.microsoft.com/fr-fr/products/active-directory/), il n'est pas nécessaire d'avoir un serveur à disposition.
-Cependant, il sera nécessaire d'avoir deux modules PowerShell pour les connexions aux différents services, mais le script s'en charge pour vous.
+Cependant, il sera nécessaire d'avoir deux modules PowerShell pour les connexions aux différents services, mais le script s'en charge pour vous.\
+:warning: Le script est rédigé en anglais afin d'éviter des problèmes d'affichage de certains caractères.
 
 
 ## :checkered_flag: Commencer ##
