@@ -42,11 +42,13 @@ Cependant, il sera nécessaire d'avoir deux modules PowerShell pour les connexio
 
 ## :checkered_flag: Commencer ##
 
+A l'aide d'un terminal bash, cloner le repository sur votre ordinateur :
 ```bash
 # Clone this project
 $ git clone https://github.com/CGRocky122/Biodevops-AzureAD.git
 ```
 
+Puis grâce à un interpréteur PowerShell exécuter en administrateur, lancer le script :
 ```powershell
 # Go to the script location
 cd <your location>
