@@ -10,8 +10,8 @@ L'objectif était de réalisé un script permettant à des équipes IT de faire 
 
 ## :wrench: Compatibilité ##
 
-:heavy_minus_sign: Active Directory
-:heavy_plus_sign: Azure Active Directory
+:heavy_minus_sign: Active Directory;\
+:heavy_plus_sign: Azure Active Directory;
 
 
 ## :sparkles: Fonctionnalités ##
