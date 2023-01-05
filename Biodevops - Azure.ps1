@@ -219,71 +219,87 @@ function CreateUser {
     $lastnameUser = $lastnameUser.ToUpper()
     $passwordprofileUser = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
     $passwordprofileUser.Password = $passwordUser
-    $mailUser = (Remove-StringLatinCharacters($firstnameUser.ToLower()))+"."+(Remove-StringLatinCharacters($lastnameUser.ToLower()))+"@biodevops.tech"
+    $mailUser = (Remove-StringLatinCharacters($firstnameUser.ToLower()))+"."+(Remove-StringLatinCharacters($lastnameUser.ToLower()))
 
     do {
         $uidUser = ("U"+$yearpromotionUser+(0..9 | Get-Random -Count 10)) -replace "\s",""
         $result = CheckEmployeeID -UID $uidUser
     } until ($result -eq $True)
 
-    $namepromotionUser = "$yearpromotionUser"+"_"+"$acronympromotionUser"
-    $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
-    $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'"
-    $group = Get-AzureADGroup -Filter "DisplayName eq '$namegroupUser'"
+    $x = 1
+    $checkUPN = CheckUPN -UPN "$mailUser@biodevops.tech"
+    if ($checkUPN -eq $False) {
+        $SelectnewUser = Read-Host "There is already a user with this UPN, do you still want to create the account ? [Y] Yes [N] No"
+        Switch ($SelectnewUser) {
+            "Y" {
+                do {
+                    $x +=1
+                    $newmailUser = $mailUser+"$x"
+                    $checkUPN = CheckUPN -UPN "$newmailUser@biodevops.tech"
+                } until ($checkUPN -eq $True)
+                
+                $mailUser = $newmailUser+"@biodevops.tech"
+                $namepromotionUser = "$yearpromotionUser"+"_"+"$acronympromotionUser"
+                $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
+                $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'"
+                $group = Get-AzureADGroup -Filter "DisplayName eq '$namegroupUser'"
 
-    New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
-                            -GivenName "$firstnameUser" `
-                            -Surname "$lastnameUser" `
-                            -UserPrincipalName "$mailUser" `
-                            -PasswordProfile $passwordprofileUser `
-                            -MailNickname "$firstnameUser.$lastnameUser" `
-                            -JobTitle "Etudiant" `
-                            -Department "$acronympromotionUser $yearpromotionUser" `
-                            -CompanyName "BioDevops" `
-                            -UsageLocation FR `
-                            -UserType Member `
-                            -AccountEnabled $True `
-                            -ErrorAction Stop `
-                            -ErrorVariable createUserError | Out-Null
-    $user = Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'"
-    if ($createUserError) {
-        return $createUserError
+                New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
+                                -GivenName "$firstnameUser" `
+                                -Surname "$lastnameUser" `
+                                -UserPrincipalName "$mailUser" `
+                                -PasswordProfile $passwordprofileUser `
+                                -MailNickname "$firstnameUser.$lastnameUser" `
+                                -JobTitle "Etudiant" `
+                                -Department "$acronympromotionUser $yearpromotionUser" `
+                                -CompanyName "BioDevops" `
+                                -UsageLocation FR `
+                                -UserType Member `
+                                -AccountEnabled $True `
+                                -ErrorAction Stop `
+                                -ErrorVariable createUserError | Out-Null
+                $user = Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'"
+                if ($createUserError) {
+                    return $createUserError
+                }
+
+                Set-AzureADUserExtension -ObjectId $user.ObjectId `
+                                         -ExtensionName "employeeId" `
+                                         -ExtensionValue $uidUser `
+                                         -ErrorAction Stop `
+                                         -ErrorVariable setExtensionError | Out-Null
+                if ($setExtensionError) {
+                    return $setExtensionError
+                }
+
+                $skuidE5 = Get-SkuID
+                Set-AzureADUserLicense -ObjectId $user.ObjectId `
+                                       -AssignedLicenses $skuidE5 `
+                                       -ErrorAction Stop `
+                                       -ErrorVariable setLicenseError | Out-Null 
+                if ($setLicenseError) {
+                    return $setLicenseError
+                }
+
+                Add-AzureADMSAdministrativeUnitMember -Id $au.Id `
+                                                      -RefObjectId $user.ObjectId `
+                                                      -ErrorAction Stop `
+                                                      -ErrorVariable addAUMemberError | Out-Null
+                if ($addAUMemberError) {
+                    return $addAUMemberError
+                }
+
+                Add-AzureADGroupMember -ObjectId $group.ObjectId `
+                                       -RefObjectId $user.ObjectId `
+                                       -ErrorAction Stop `
+                                       -ErrorVariable addGroupMemberError | Out-Null
+                if ($addGroupMemberError) {
+                    return $addGroupMemberError
+                }
+            }
+            "N" {break}
+        }
     }
-
-    Set-AzureADUserExtension -ObjectId $user.ObjectId `
-                             -ExtensionName "employeeId" `
-                             -ExtensionValue $uidUser `
-                             -ErrorAction Stop `
-                             -ErrorVariable setExtensionError | Out-Null
-    if ($setExtensionError) {
-        return $setExtensionError
-    }
-
-    $skuidE5 = Get-SkuID
-    Set-AzureADUserLicense -ObjectId $user.ObjectId `
-                           -AssignedLicenses $skuidE5 `
-                           -ErrorAction Stop `
-                           -ErrorVariable setLicenseError | Out-Null 
-    if ($setLicenseError) {
-        return $setLicenseError
-    }
-
-    Add-AzureADMSAdministrativeUnitMember -Id $au.Id `
-                                          -RefObjectId $user.ObjectId `
-                                          -ErrorAction Stop `
-                                          -ErrorVariable addAUMemberError | Out-Null
-    if ($addAUMemberError) {
-        return $addAUMemberError
-    }
-
-    Add-AzureADGroupMember -ObjectId $group.ObjectId `
-                           -RefObjectId $user.ObjectId `
-                           -ErrorAction Stop `
-                           -ErrorVariable addGroupMemberError | Out-Null
-    if ($addGroupMemberError) {
-        return $addGroupMemberError
-    }
-
 }
 
 function CreateSingleUser {
@@ -338,6 +354,22 @@ function CheckEmployeeID {
     Foreach ($u in $users) { 
         $u = Get-AzureADUserExtension -ObjectId $u.ObjectId
         if ($u.employeeId -eq $UID){
+            return $False
+            break
+        }
+    }
+    return $True
+}
+
+function CheckUPN {
+    param (
+        [string]$UPN
+    )
+
+    $users = Get-AzureADUser
+
+    Foreach ($u in $users) {
+        if ($u.UserPrincipalName -eq $UPN) {
             return $False
             break
         }
