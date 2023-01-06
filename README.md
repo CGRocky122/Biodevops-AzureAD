@@ -38,6 +38,7 @@ Et la base de connaissance suivante :
 Avant de commercer, vous devez avoir l'application [Windows Terminal](https://www.microsoft.com/store/productId/9N0DX20HK701) d'installer.
 Comme le script est conçu pour de l'administration d'[AzureAD](https://azure.microsoft.com/fr-fr/products/active-directory/), il n'est pas nécessaire d'avoir un serveur à disposition.
 Cependant, il sera nécessaire d'avoir deux modules PowerShell pour les connexions aux différents services, mais le script s'en charge pour vous.\
+
 :warning: Le script est rédigé en anglais afin d'éviter des problèmes d'affichage de certains caractères.
 
 
@@ -55,7 +56,7 @@ Puis grâce à un interpréteur PowerShell exécuter en administrateur, lancer l
 cd <your location>
 
 # Execute
-.\"Biodevops - AzureAD.ps1"
+& '.\Biodevops - Azure.ps1'
 ```
 
 ## :memo: Author ##

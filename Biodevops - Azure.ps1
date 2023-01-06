@@ -74,9 +74,6 @@ function DelegateMenu {
 
 # Connection modules Microsoft
 function AADConnect {
-
-    $Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
-
     try{
         Connect-AzureAD -Credential $Global:AADCredential | Out-Null
     }catch{
@@ -621,6 +618,7 @@ function ChangePromotionFromCSV {
 
 # ======== MAIN ========
 require
+$Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
 AADConnect
 
 do{
