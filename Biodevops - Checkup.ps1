@@ -3,6 +3,18 @@ function require {
     Install-Module -Name MicrosoftTeams
 }
 
+function Credential {
+    param (
+        [string]$Username,
+        [string]$Password
+    )
+
+    $secureStringPwd = $Password | ConvertTo-SecureString -AsPlainText -Force 
+    $creds = New-Object System.Management.Automation.PSCredential -ArgumentList $Username, $secureStringPwd
+
+    return $creds
+}
+
 function LogMessage {
     param (
         [string]$Filename,
@@ -176,12 +188,14 @@ function CheckClassDelegate {
 }
 
 # ======== MAIN ========
-$Global:NotifCrendential = Get-Credential -UserName "notification@biodevops.tech" -Message "Enter the password of the Notification account to receive the logs export by email."
 AADConnect
 
+# DO NOT DO THAT !! But for the script is ok
+$Credential = Credential -Username "notification@biodevops.tech" -Password "Fug37537"
+
 CheckPromotionStudent
-ExtractLog -file PromotionStudent -Credential $Global:NotifCrendential
+ExtractLog -file PromotionStudent -Credential $Credential
 CheckClassDelegate
-ExtractLog -file ClassDelegate -Credential $Global:NotifCrendential
+ExtractLog -file ClassDelegate -Credential $Credential
 
 AADDisconnect
