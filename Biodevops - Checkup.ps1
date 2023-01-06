@@ -13,20 +13,20 @@ function LogMessage {
 
 function ExtractLog {
     param (
-        [string]$file
+        [string]$file,
+        [PSCredential]$Credential
     )
 
     $From = "notification@biodevops.tech"
     $To = "cgaspar2@myges.fr"
-    $Cc = "g.taverne--antoine@myges.fr"
-    $Cc2 = "e.hagnere@myges.fr"
+    $Cc = "gtaverneantoine@myges.fr", "ehagnere@myges.fr"
     $Attachment = "C:\temp\$file.txt"
     $Subject = "[Log] Log of $file.txt"
     $Body = "Please check the attached"
     $SMTPServer = "smtp.office365.com"
     $SMTPPort = "587"
 
-    Send-MailMessage -From $From -to $To -Cc $Cc,$Cc2 -Subject $Subject -Body $Body -SmtpServer $SMTPServer -port $SMTPPort -Attachments $Attachment -UseSsl -Credential "notification@biodevops.tech"
+    Send-MailMessage -From $From -to $To -Cc $Cc -Subject $Subject -Body $Body -SmtpServer $SMTPServer -port $SMTPPort -Attachments $Attachment -UseSsl -Credential $Credential
 }
 
 function AADConnect {
@@ -176,11 +176,12 @@ function CheckClassDelegate {
 }
 
 # ======== MAIN ========
+$Global:NotifCrendential = Get-Credential -UserName "notification@biodevops.tech" -Message "Enter the password of the Notification account to receive the logs export by email."
 AADConnect
 
 CheckPromotionStudent
-ExtractLog -file PromotionStudent
+ExtractLog -file PromotionStudent -Credential $Global:NotifCrendential
 CheckClassDelegate
-ExtractLog -file ClassDelegate
+ExtractLog -file ClassDelegate -Credential $Global:NotifCrendential
 
 AADDisconnect
