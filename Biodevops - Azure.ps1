@@ -8,19 +8,14 @@ function require {
 function MainMenu {
     #Clear-Host
     Write-Host "`n================ Biodevops - AzureAD management - Main Menu ================"
-    Write-Host "[1] - Promotions menu"
-    Write-Host "[2] - Users menu"
-    Write-Host "[3] - Delegate menu"
+    Write-Host "[1] - Create Promotions"
+    Write-Host "[2] - Create Users"
+    Write-Host "[3] - Disable Users"
+    Write-Host "[4] - Change User's Promotion"
+    Write-Host "[5] - Assign Delegate to User"
+    Write-Host "[6] - Rename User"
     Write-Host "[0] - Exit"
 
-}
-
-function PromoMenu {
-    #Clear-Host
-    Write-Host "`n================ Biodevops - AzureAD management - Promotions Menu ================"
-    Write-Host "[1] - Create promotions"
-    Write-Host "[2] - Delete promotions"
-    Write-Host "[0] - Return to main menu"
 }
 
 function PromotionCreationMenu {
@@ -28,15 +23,6 @@ function PromotionCreationMenu {
     Write-Host "`n================ Biodevops - AzureAD management - Promotions Creation Menu ================"
     Write-Host "[1] - Create a unique promotion"
     Write-Host "[2] - Create promotion in bulk"
-    Write-Host "[0] - Return to main menu"
-}
-
-function UserMenu {
-    #Clear-Host
-    Write-Host "`n================ Biodevops - AzureAD management - Users Menu ================"
-    Write-Host "[1] - Create users"
-    Write-Host "[2] - Disable users"
-    Write-Host "[3] - Change promotion"
     Write-Host "[0] - Return to main menu"
 }
 
@@ -56,12 +42,12 @@ function UserDisableMenu {
     Write-Host "[0] - Return to main menu"
 }
 
-function ChangeUserPromotion {
-       #Clear-Host
-       Write-Host "`n================ Biodevops - AzureAD management - Change User's promotion Menu ================"
-       Write-Host "[1] - Change a unique user"
-       Write-Host "[2] - Change users in bulk"
-       Write-Host "[0] - Return to main menu" 
+function ChangeUserPromotionMenu {
+    #Clear-Host
+    Write-Host "`n================ Biodevops - AzureAD management - Change User's promotion Menu ================"
+    Write-Host "[1] - Change a unique user"
+    Write-Host "[2] - Change users in bulk"
+    Write-Host "[0] - Return to main menu" 
 }
 
 function DelegateMenu {
@@ -69,6 +55,14 @@ function DelegateMenu {
     Write-Host "`n================ Biodevops - AzureAD management - Delegate Menu ================"
     Write-Host "[1] - Assign delegate to unique user"
     Write-Host "[2] - Assign delegate to a whole promotion"
+    Write-Host "[0] - Return to main menu"
+}
+
+function RenameMenu {
+    #Clear-Host
+    Write-Host "`n================ Biodevops - AzureAD management - Rename Menu ================"
+    Write-Host "[1] - Rename a unique user"
+    Write-Host "[2] - Rename users in bulk"
     Write-Host "[0] - Return to main menu"
 }
 
@@ -239,71 +233,72 @@ function CreateUser {
                     $x +=1
                     $newmailUser = $mailUser+"$x"
                     $checkUPN = CheckUPN -UPN "$newmailUser@biodevops.tech"
-                } until ($checkUPN -eq $True)
-                
-                $mailUser = $newmailUser+"@biodevops.tech"
-                $namepromotionUser = "$yearpromotionUser"+"_"+"$acronympromotionUser"
-                $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
-                $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'"
-                $group = Get-AzureADGroup -Filter "DisplayName eq '$namegroupUser'"
-
-                Write-Warning = "[*] Creating a new user in progress"
-
-                New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
-                                -GivenName "$firstnameUser" `
-                                -Surname "$lastnameUser" `
-                                -UserPrincipalName "$mailUser" `
-                                -PasswordProfile $passwordprofileUser `
-                                -MailNickname "$firstnameUser.$lastnameUser" `
-                                -JobTitle "Etudiant" `
-                                -Department "$acronympromotionUser $yearpromotionUser" `
-                                -CompanyName "BioDevops" `
-                                -UsageLocation FR `
-                                -UserType Member `
-                                -AccountEnabled $True `
-                                -ErrorAction Stop `
-                                -ErrorVariable createUserError | Out-Null
-                $user = Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'"
-                if ($createUserError) {
-                    return $createUserError
-                }
-
-                Set-AzureADUserExtension -ObjectId $user.ObjectId `
-                                         -ExtensionName "employeeId" `
-                                         -ExtensionValue $uidUser `
-                                         -ErrorAction Stop `
-                                         -ErrorVariable setExtensionError | Out-Null
-                if ($setExtensionError) {
-                    return $setExtensionError
-                }
-
-                $skuidE5 = Get-SkuID
-                Set-AzureADUserLicense -ObjectId $user.ObjectId `
-                                       -AssignedLicenses $skuidE5 `
-                                       -ErrorAction Stop `
-                                       -ErrorVariable setLicenseError | Out-Null 
-                if ($setLicenseError) {
-                    return $setLicenseError
-                }
-
-                Add-AzureADMSAdministrativeUnitMember -Id $au.Id `
-                                                      -RefObjectId $user.ObjectId `
-                                                      -ErrorAction Stop `
-                                                      -ErrorVariable addAUMemberError | Out-Null
-                if ($addAUMemberError) {
-                    return $addAUMemberError
-                }
-
-                Add-AzureADGroupMember -ObjectId $group.ObjectId `
-                                       -RefObjectId $user.ObjectId `
-                                       -ErrorAction Stop `
-                                       -ErrorVariable addGroupMemberError | Out-Null
-                if ($addGroupMemberError) {
-                    return $addGroupMemberError
-                }
+                } until ($checkUPN -eq $True) 
+                $mailUser = $newmailUser
             }
-            "N" {break}
+            "N" {return}
         }
+    }
+
+    $mailUser = $mailUser+"@biodevops.tech"
+    $namepromotionUser = "$yearpromotionUser"+"_"+"$acronympromotionUser"
+    $namegroupUser = "$acronympromotionUser"+"."+"$yearpromotionUser"
+    $au = Get-AzureADMSAdministrativeUnit -Filter "DisplayName eq '$namepromotionUser'"
+    $group = Get-AzureADGroup -Filter "DisplayName eq '$namegroupUser'"
+
+    Write-Warning "[*] Creating a new user in progress"
+
+    New-AzureADUser -DisplayName "$firstnameUser $lastnameUser" `
+                    -GivenName "$firstnameUser" `
+                    -Surname "$lastnameUser" `
+                    -UserPrincipalName "$mailUser" `
+                    -PasswordProfile $passwordprofileUser `
+                    -MailNickname "$firstnameUser.$lastnameUser" `
+                    -JobTitle "Etudiant" `
+                    -Department "$acronympromotionUser $yearpromotionUser" `
+                    -CompanyName "BioDevops" `
+                    -UsageLocation FR `
+                    -UserType Member `
+                    -AccountEnabled $True `
+                    -ErrorAction Stop `
+                    -ErrorVariable createUserError | Out-Null
+    $user = Get-AzureADUser -Filter "UserPrincipalName eq '$mailUser'"
+    if ($createUserError) {
+        return $createUserError
+    }
+
+    Set-AzureADUserExtension -ObjectId $user.ObjectId `
+                                -ExtensionName "employeeId" `
+                                -ExtensionValue $uidUser `
+                                -ErrorAction Stop `
+                                -ErrorVariable setExtensionError | Out-Null
+    if ($setExtensionError) {
+        return $setExtensionError
+    }
+
+    $skuidE5 = Get-SkuID
+    Set-AzureADUserLicense -ObjectId $user.ObjectId `
+                            -AssignedLicenses $skuidE5 `
+                            -ErrorAction Stop `
+                            -ErrorVariable setLicenseError | Out-Null 
+    if ($setLicenseError) {
+        return $setLicenseError
+    }
+
+    Add-AzureADMSAdministrativeUnitMember -Id $au.Id `
+                                            -RefObjectId $user.ObjectId `
+                                            -ErrorAction Stop `
+                                            -ErrorVariable addAUMemberError | Out-Null
+    if ($addAUMemberError) {
+        return $addAUMemberError
+    }
+
+    Add-AzureADGroupMember -ObjectId $group.ObjectId `
+                            -RefObjectId $user.ObjectId `
+                            -ErrorAction Stop `
+                            -ErrorVariable addGroupMemberError | Out-Null
+    if ($addGroupMemberError) {
+        return $addGroupMemberError
     }
 }
 
@@ -616,6 +611,82 @@ function ChangePromotionFromCSV {
     }
 }
 
+# ChangeUserName
+function RenameUsername {
+    param (
+        [string]$oldUPN,
+        [string]$newFirstname,
+        [string]$newLastname
+    )
+
+    $oldUser = Get-AzureADUser -Filter "UserPrincipalName eq '$oldUPN'"
+    $Firstname = $newFirstname.substring(0, 1).ToUpper()+$newFirstname.substring(1).ToLower()
+    $Lastname = $newLastname.ToUpper()
+    $mailUser = (Remove-StringLatinCharacters($firstnameUser.ToLower()))+"."+(Remove-StringLatinCharacters($lastnameUser.ToLower()))
+
+    $x = 1
+    $checkUPN = CheckUPN -UPN "$mailUser@biodevops.tech"
+    if ($checkUPN -eq $False) {
+        $SelectnewUser = Read-Host "There is already a user with this UPN, do you still want to update the account ? [Y] Yes [N] No"
+        Switch ($SelectnewUser) {
+            "Y" {
+                do {
+                    $x +=1
+                    $newmailUser = $mailUser+"$x"
+                    $checkUPN = CheckUPN -UPN "$newmailUser@biodevops.tech"
+                } until ($checkUPN -eq $True) 
+                $mailUser = $newmailUser
+            }
+            "N" {return}
+        }
+    }
+
+    $mailUser = $mailUser+"@biodevops.tech"
+    Write-Warning "[*] Update of the student account in progress"
+
+    Set-AzureADUser -ObjectId $oldUser.ObjectId `
+                    -DisplayName "$Firstname $Lastname"`
+                    -GivenName "$Firstname" `
+                    -Surname "$Lastname" `
+                    -UserPrincipalName "$mailUser" `
+                    -ErrorAction Stop `
+                    -ErrorVariable setUserError | Out-Null
+    if ($setUserError) {
+        return $setUserError
+    }
+}
+
+function RenameSingleUser {
+    [string]$UPN = Read-Host "Enter the student's UPN"
+    [string]$firstnameUser = Read-Host "Enter the student's new firstname"
+    [string]$lastnameUser = Read-Host "Enter the student's new lastname"
+
+    $result = RenameUsername -oldUPN $UPN -newFirstname $firstnameUser -newLastname $lastnameUser
+    if ($result) {
+        Write-Error $Error[0]
+    } else {
+        Write-Host "[+] The account has been updated" -ForegroundColor Green
+    }
+}
+
+function RenameUsersFromCSV {
+    $pathCSV = Read-Host "Enter the location of your CSV"
+    $dataCSV = Import-CSV -Path $pathCSV -Delimiter ","
+
+    Foreach ($User in $dataCSV) {
+        $UPN = $User.UserPrincipalName
+        $firstnameUser = $User.firstname
+        $lastnameUser = $User.lastname
+
+        $result = RenameUsername -oldUPN $UPN -newFirstname $firstnameUser -newLastname $lastnameUser
+        if ($result) {
+            Write-Error $Error[0]
+        } else {
+            Write-Host "[+] The account has been updated" -ForegroundColor Green
+        }
+    }
+}
+
 # ======== MAIN ========
 require
 $Global:AADCredential = Get-Credential -Message "Enter the login credentials of a general Azure Active Directory administrator account"
@@ -626,77 +697,69 @@ do{
     [int]$MainMenu = Read-Host "Enter an action"
     Switch($MainMenu){
         1{
-            do{
-                PromoMenu
-                [int]$PromoMenu = Read-Host "Enter an action"
-                Switch($PromoMenu){
-                    1{
-                        do {
-                            PromotionCreationMenu
-                            [int]$PromoCreateMenu = Read-Host "Enter an action"
-                            Switch($PromoCreateMenu){
-                                1{CreateSinglePromotion}
-                                2{CreatePromotionFromCSV}
-                                0{break}
-                            }
-                        }until($PromoCreateMenu -eq 0)
-                    }
-                    0{break}
+            do {
+                PromotionCreationMenu
+                [int]$PromotionCreationMenu = Read-Host "Enter an action"
+                Switch($PromotionCreationMenu){
+                    1 {CreateSinglePromotion}
+                    2 {CreatePromotionFromCSV}
                 }
-            }until($PromoMenu -eq 0)
+            } until ($PromotionCreationMenu -eq 0)
         }
         2{
-            do{
-                UserMenu
-                [int]$UserMenu = Read-Host "Enter an action"
-                Switch($UserMenu){
-                    1{
-                        do{
-                            UserCreationMenu
-                            [int]$UserCreateMenu = Read-Host "Enter an action"
-                            Switch($UserCreateMenu){
-                                1{CreateSingleUser}
-                                2{CreateUserFromCSV}
-                                0{break}
-                            }
-                        }until($UserCreateMenu -eq 0)
-                    }
-                    2{
-                        do{
-                            UserDisableMenu
-                            [int]$UserDisableMenu = Read-Host "Enter an Action"
-                            Switch($UserDisableMenu){
-                                1{DisableSingleUser}
-                                2{DisableUserFromCSV}
-                                0{break}
-                            }
-                        }until($UserDisableMenu -eq 0)
-                    }
-                    3{
-                        do {
-                            ChangeUserPromotion
-                            [int]$ChangeUserPromotion = Read-Host "Enter an action"
-                            Switch($ChangeUserPromotion){
-                                1{ChangePromotionSingleUser}
-                                2{ChangePromotionFromCSV}
-                                0{break}
-                            }
-                        }until($ChangeUserPromotion -eq 0)
-                    }
-                    0{break}
+            do {
+                UserCreationMenu
+                [int]$UserCreationMenu = Read-Host "Enter an action"
+                Switch ($UserCreationMenu){
+                    1 {CreateSingleUser}
+                    2 {CreateUserFromCSV}
+                    0 {break}
                 }
-            }until($UserMenu -eq 0)
+            } until ($UserCreationMenu -eq 0)
         }
         3{
-            do{
+            do {
+                UserDisableMenu
+                [int]$UserDisableMenu = Read-Host "Enter an action"
+                Switch ($UserDisableMenu){
+                    1 {DisableSingleUser}
+                    2 {DisableUserFromCSV}
+                    0 {break}
+                }
+            } until ($UserDisableMenu -eq 0)
+        }
+        4{
+            do {
+                ChangeUserPromotionMenu
+                [int]$ChangeUserPromotionMenu = Read-Host "Enter an action"
+                Switch ($ChangeUserPromotionMenu){
+                    1 {ChangePromotionSingleUser}
+                    2 {ChangePromotionFromCSV}
+                    0 {break}
+                }
+            } until ($ChangeUserPromotionMenu -eq 0)
+        }
+        5{
+            do {
                 DelegateMenu
                 [int]$DelegateMenu = Read-Host "Enter an action"
-                Switch($DelegateMenu){
-                    1{SetUserManager}
-                    2{SetPromotionManager}
-                    0{break}
+                Switch ($DelegateMenu){
+                    1 {SetUserManager}
+                    2 {SetPromotionManager}
+                    0 {break}
                 }
-            }until($DelegateMenu -eq 0)
+            } until ($DelegateMenu -eq 0)
+        }
+        6 {
+            do {
+                RenameMenu
+                [int]$RenameMenu = Read-Host "Enter an action"
+                Switch ($RenameMenu){
+                    1 {RenameSingleUser}
+                    2 {RenameUsersFromCSV}
+                    0 {break}
+                }
+            } until ($RenameMenu -eq 0)
         }
         0{break}
     }

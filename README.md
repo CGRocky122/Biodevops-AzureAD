@@ -19,7 +19,9 @@ L'objectif était de réalisé un script permettant à des équipes IT de faire 
 :star2: Création d'une promotion de A à Z\
 :star2: Création et désactivation d'un compte d'étudiant de manière unique ou via CSV\
 :star2: Assignation de délégué par étudiant ou promotion\
-:star2: Gestion des doublons
+:star2: Gestion des doublons\
+:star2: Changement de noms des utilisateurs\
+:star2: Script plannifié pour vérification des délégués et promotion avec rectification, logs et export par mail
 
 
 ## :rocket: Technologies ##
@@ -40,6 +42,25 @@ Comme le script est conçu pour de l'administration d'[AzureAD](https://azure.mi
 Cependant, il sera nécessaire d'avoir deux modules PowerShell pour les connexions aux différents services, mais le script s'en charge pour vous.\
 
 :warning: Le script est rédigé en anglais afin d'éviter des problèmes d'affichage de certains caractères.
+
+
+## :thread: CSVs ##
+
+Le script permet un fonctionnement de certaines fonctions via CSV.
+Nous fournissons les templates et voici les correspondances par script :
+
+### Biodevops - Azure ###
+
+- Création de promotion -> [Promos.csv]()
+- Création de comptes étudiant -> [Users.csv]()
+- Désactivation de comptes étudiant -> [DisableUsers.csv]()
+- Changement d'un étudiant de promotion -> [PromotionUsers.csv]()
+- Renommer des étudiants -> [RenameUsers.csv]()
+
+### Biodevops - Checkup ###
+
+- Liste des etudiants par promotion -> [PromotionStudent.csv]()
+- Liste des délégués par promotion -> [ClassDelegate.csv]()
 
 
 ## :checkered_flag: Commencer ##
